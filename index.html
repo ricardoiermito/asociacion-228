@@ -458,8 +458,7 @@
                                         <th class="p-3">DNI / CUIL</th>
                                         <th class="p-3">Contacto / Dirección</th>
                                         <th class="p-3">Rol / Estado</th>
-                                        <th class="p-3 text-center no-print">Asignar Rol</th>
-                                        <th class="p-3 text-center no-print">Acciones</th>
+                                        <th class="p-3 text-center no-print">Acciones y Gestión</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usuariosAdminTable" class="divide-y divide-slate-100">
@@ -500,20 +499,21 @@
                         </div>
 
                         <div class="border-t border-slate-200 pt-4">
-                            <h3 class="font-bold text-slate-800 text-xs uppercase mb-3">Firmas de Conformidad de Cierre de Arqueo</h3>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-8 text-center pt-8 font-mono text-xs">
-                                <div class="border-t border-slate-400 pt-2">
-                                    <p class="font-bold">Ricardo Iermito</p>
-                                    <p class="text-[10px] text-slate-500 font-sans">Tesorero General</p>
+                            <h3 class="font-bold text-slate-800 text-xs uppercase mb-3"><i class="fa-solid fa-file-signature text-appBlue mr-1"></i> Libro de Firmas y Conformidad de Comisión Directiva</h3>
+                            <p class="text-xs text-slate-500 mb-4">Cada miembro autorizado puede emitir su firma digital de conformidad para el presente balance y arqueo (Excluye socios generales).</p>
+                            
+                            <div id="firmasConformidadContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <!-- Dinámico según firmas registradas -->
+                            </div>
+
+                            <div id="btnFirmarBox" class="no-print bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-xs">Emitir Firma de Conformidad</p>
+                                    <p class="text-[11px] text-slate-500">Firmarás con el rol y usuario activo actual.</p>
                                 </div>
-                                <div class="border-t border-slate-400 pt-2">
-                                    <p class="font-bold">Ana Gómez</p>
-                                    <p class="text-[10px] text-slate-500 font-sans">Presidente CD</p>
-                                </div>
-                                <div class="border-t border-slate-400 pt-2">
-                                    <p class="font-bold">Revisor de Cuentas</p>
-                                    <p class="text-[10px] text-slate-500 font-sans">Auditor Interno</p>
-                                </div>
+                                <button onclick="firmarActuacionActual()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow transition-colors flex items-center gap-1.5">
+                                    <i class="fa-solid fa-signature"></i> Firmar con mi Rol
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -676,40 +676,50 @@
         </div>
     </div>
 
-    <!-- MODAL EDITAR PERFIL DE USUARIO -->
+    <!-- MODAL EDITAR PERFIL DE USUARIO Y ROL -->
     <div id="modalEditUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
-                <span>EDITAR DATOS DE USUARIO</span>
+                <span>EDITAR DATOS Y ROL DE USUARIO</span>
                 <button onclick="closeEditUsuarioModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="saveEditUsuario(event)" class="p-4 space-y-2.5 text-xs">
                 <input type="hidden" id="editUserIndex">
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block font-bold text-slate-700">Nombre</label>
+                        <label class="block font-bold text-slate-700 mb-1">Nombre</label>
                         <input type="text" id="editUserNombre" class="w-full border border-slate-300 rounded p-1.5" required>
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700">Apellido</label>
+                        <label class="block font-bold text-slate-700 mb-1">Apellido</label>
                         <input type="text" id="editUserApellido" class="w-full border border-slate-300 rounded p-1.5" required>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block font-bold text-slate-700">DNI</label>
+                        <label class="block font-bold text-slate-700 mb-1">DNI</label>
                         <input type="text" id="editUserDni" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700">CUIL</label>
+                        <label class="block font-bold text-slate-700 mb-1">CUIL</label>
                         <input type="text" id="editUserCuil" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
                     </div>
                 </div>
                 <div>
-                    <label class="block font-bold text-slate-700">Teléfono</label>
+                    <label class="block font-bold text-slate-700 mb-1">Teléfono</label>
                     <input type="text" id="editUserTelefono" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
                 </div>
-                <div class="pt-2 border-t border-slate-200 flex justify-end gap-2">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Asignar Rol / Estado</label>
+                    <select id="editUserRol" class="w-full border border-slate-300 rounded p-1.5 font-bold bg-slate-50">
+                        <option value="Socio">Socio</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Tesorero">Tesorero</option>
+                        <option value="Presidente">Presidente</option>
+                        <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                    </select>
+                </div>
+                <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
                     <button type="button" onclick="closeEditUsuarioModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
                     <button type="submit" class="px-4 py-1.5 bg-appBlue text-white rounded font-bold">Guardar Cambios</button>
                 </div>
@@ -796,6 +806,11 @@
 
         let dbActas = [
             { id: 1, numero: 'Acta N° 01/2026', fecha: '2026-03-10', titulo: 'Constitución de Junta y Asignación de Roles', firmantes: 'Presidente, Tesorero', link: '#' }
+        ];
+
+        let dbFirmas = [
+            { rol: 'Tesorero', nombre: 'Ricardo Iermito', fecha: '2026-03-10 10:30', estado: 'Firmado Digitalmente' },
+            { rol: 'Presidente', nombre: 'Ana Gómez', fecha: '2026-03-10 11:15', estado: 'Firmado Digitalmente' }
         ];
 
         // INGRESO
@@ -961,6 +976,82 @@
             renderUsuariosAdmin();
             renderActas();
             renderArqueo();
+            renderFirmas();
+        }
+
+        function renderFirmas() {
+            const container = document.getElementById('firmasConformidadContainer');
+            const btnBox = document.getElementById('btnFirmarBox');
+            if (!container) return;
+
+            const rolesComision = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
+            
+            container.innerHTML = rolesComision.map(rol => {
+                let firmaEncontrada = dbFirmas.find(f => f.rol === rol);
+                if (firmaEncontrada) {
+                    return `
+                        <div class="bg-green-50 border border-green-200 p-3.5 rounded-lg space-y-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-green-200 text-green-800 rounded uppercase">${rol}</span>
+                            <p class="font-bold text-slate-900 text-xs mt-1">${firmaEncontrada.nombre}</p>
+                            <p class="text-[10px] text-green-700 font-mono"><i class="fa-solid fa-circle-check mr-1"></i> ${firmaEncontrada.estado}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">${firmaEncontrada.fecha}</p>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-lg space-y-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-700 rounded uppercase">${rol}</span>
+                            <p class="font-bold text-slate-400 text-xs mt-1">Pendiente de firma</p>
+                            <p class="text-[10px] text-amber-600 font-mono"><i class="fa-solid fa-clock mr-1"></i> Aguardando rúbrica</p>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            // Ocultar el botón de firmar si el usuario actual es un Socio o Pendiente
+            if (btnBox && currentUser) {
+                if (currentUser.role === 'Socio' || currentUser.role === 'Pendiente') {
+                    btnBox.classList.add('hidden');
+                } else {
+                    btnBox.classList.remove('hidden');
+                }
+            }
+        }
+
+        function firmarActuacionActual() {
+            if (!currentUser) return;
+            let rolActual = currentUser.role;
+
+            // Restricción estricta: Excluir por completo a socios y cualquier rol que no pertenezca a la Comisión Directiva / Órgano de Fiscalización
+            const rolesAutorizados = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
+            if (!rolesAutorizados.includes(rolActual)) {
+                alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma en actas y balances de la Asociación.");
+                return;
+            }
+
+            let nombreCompleto = currentUser.nombre ? `${currentUser.nombre} ${currentUser.apellido}` : currentUser.name || currentUser.email;
+            let fechaStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+            // Reemplazar o agregar firma del rol
+            dbFirmas = dbFirmas.filter(f => f.rol !== rolActual);
+            dbFirmas.push({
+                rol: rolActual,
+                nombre: nombreCompleto,
+                fecha: fechaStr,
+                estado: 'Firmado Digitalmente'
+            });
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('firmas').add({
+                    rol: rolActual,
+                    nombre: nombreCompleto,
+                    fecha: fechaStr,
+                    estado: 'Firmado Digitalmente'
+                }).catch(e => console.log(e));
+            }
+
+            alert(`Firma registrada con éxito bajo el rol de ${rolActual}.`);
+            renderFirmas();
         }
 
         function renderEntidad() {
@@ -1075,17 +1166,10 @@
                             ${u.role.toUpperCase()}
                         </span>
                     </td>
-                    <td class="p-3 text-center no-print">
-                        <select onchange="cambiarRolUsuario(${index}, this.value)" class="border border-slate-300 rounded p-1 text-xs">
-                            <option value="Socio" ${u.role === 'Socio' ? 'selected' : ''}>Socio</option>
-                            <option value="Tesorero" ${u.role === 'Tesorero' ? 'selected' : ''}>Tesorero</option>
-                            <option value="Presidente" ${u.role === 'Presidente' ? 'selected' : ''}>Presidente</option>
-                            <option value="Revisor de Cuentas" ${u.role === 'Revisor de Cuentas' ? 'selected' : ''}>Revisor de Cuentas</option>
-                        </select>
-                    </td>
                     <td class="p-3 text-center space-x-1 no-print">
-                        <button onclick="openEditUsuarioModal(${index})" class="px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="darDeBajaUsuario(${index})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold"><i class="fa-solid fa-trash"></i></button>
+                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i></button>` : ''}
+                        <button onclick="openEditUsuarioModal(${index})" class="px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar / Cambiar Rol"><i class="fa-solid fa-pen"></i> Editar</button>
+                        <button onclick="darDeBajaUsuario(${index})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Dar de baja"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
@@ -1173,6 +1257,7 @@
             document.getElementById('editUserDni').value = u.dni;
             document.getElementById('editUserCuil').value = u.cuil;
             document.getElementById('editUserTelefono').value = u.telefono;
+            document.getElementById('editUserRol').value = u.role || 'Socio';
             document.getElementById('modalEditUsuario').classList.remove('hidden');
         }
         function closeEditUsuarioModal() { document.getElementById('modalEditUsuario').classList.add('hidden'); }
@@ -1185,7 +1270,32 @@
             dbUsers[i].dni = document.getElementById('editUserDni').value;
             dbUsers[i].cuil = document.getElementById('editUserCuil').value;
             dbUsers[i].telefono = document.getElementById('editUserTelefono').value;
+            let nuevoRol = document.getElementById('editUserRol').value;
+            dbUsers[i].role = nuevoRol;
+
+            let u = dbUsers[i];
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({
+                    nombre: u.nombre,
+                    apellido: u.apellido,
+                    dni: u.dni,
+                    cuil: u.cuil,
+                    telefono: u.telefono,
+                    role: u.role
+                }).then(() => console.log("Usuario actualizado en Firestore"));
+            }
+
             closeEditUsuarioModal();
+            renderAll();
+        }
+
+        function aprobarUsuario(index) {
+            dbUsers[index].role = 'Socio';
+            let u = dbUsers[index];
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
+                    .then(() => console.log("Usuario aprobado en Firestore"));
+            }
             renderAll();
         }
 
