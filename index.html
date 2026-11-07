@@ -1759,19 +1759,43 @@
 
         function renderActas() {
             const body = document.getElementById('actasTableBody');
+            let esPresidente = currentUser && currentUser.role === 'Presidente';
+
             body.innerHTML = dbActas.map(a => `
                 <tr class="hover:bg-slate-50">
                     <td class="p-3 font-bold">${a.numero}</td>
                     <td class="p-3">${a.fecha}</td>
                     <td class="p-3 font-sans font-bold">${a.titulo}</td>
                     <td class="p-3 font-sans">${a.firmantes}</td>
-                    <td class="p-3 text-center font-sans no-print">
+                    <td class="p-3 text-center font-sans no-print space-x-1">
                         <a href="${a.link}" target="_blank" class="px-2.5 py-1 bg-appRed text-white font-bold rounded text-[11px] inline-flex items-center gap-1">
-                            <i class="fa-solid fa-file-pdf"></i> Descargar / Ver
+                            <i class="fa-solid fa-file-pdf"></i> Ver Link
                         </a>
+                        ${esPresidente ? `<button onclick="deleteActa('${a.id || ''}', '${a.numero}')" class="px-2 py-1 bg-red-700 hover:bg-red-800 text-white rounded font-bold text-[10px]" title="Eliminar Acta (Exclusivo Presidente)"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </td>
                 </tr>
             `).join('');
+        }
+
+        function deleteActa(id, numeroActa) {
+            if (!currentUser || currentUser.role !== 'Presidente') {
+                alert("ACCESO DENEGADO: La eliminación de actas oficiales es una atribución exclusiva del Presidente.");
+                return;
+            }
+            if (confirm(`⚠️ ¿Estás seguro de eliminar el ${numeroActa}? Esta acción es irreversible.`)) {
+                if (isFirebaseReady) {
+                    // Buscar documento por id o numero en Firestore
+                    firebase.firestore().collection('actas').where('numero', '==', numeroActa).get()
+                        .then(snapshot => {
+                            snapshot.forEach(doc => {
+                                doc.ref.delete();
+                            });
+                        }).catch(err => console.log(err));
+                }
+                dbActas = dbActas.filter(a => a.id != id && a.numero != numeroActa);
+                renderAll();
+                alert("Acta eliminada con éxito.");
+            }
         }
 
         function openNuevaActaModal() { document.getElementById('modalNuevaActa').classList.remove('hidden'); }
@@ -1779,16 +1803,34 @@
 
         function saveNuevaActa(e) {
             e.preventDefault();
-            dbActas.unshift({
+            let linkVal = document.getElementById('actaLinkPdf').value.trim();
+            if (!linkVal || (!linkVal.startsWith('http://') && !linkVal.startsWith('https://') && !linkVal.startsWith('ftp://'))) {
+                alert("Por favor ingresá un enlace (URL) válido que comience con http:// o https:// para el documento PDF del acta.");
+                return;
+            }
+
+            let nuevaActa = {
                 id: Date.now(),
                 numero: document.getElementById('actaNumero').value,
                 fecha: document.getElementById('actaFecha').value,
                 titulo: document.getElementById('actaTitulo').value,
                 firmantes: document.getElementById('actaFirmantes').value,
-                link: document.getElementById('actaLinkPdf').value || '#'
-            });
-            closeNuevaActaModal();
-            renderAll();
+                link: linkVal
+            };
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('actas').add(nuevaActa)
+                    .then(() => {
+                        closeNuevaActaModal();
+                        alert("Acta registrada y guardada en la base de datos con éxito.");
+                    })
+                    .catch(err => alert("Error al guardar acta en Firebase: " + err.message));
+            } else {
+                dbActas.unshift(nuevaActa);
+                closeNuevaActaModal();
+                renderAll();
+                alert("Acta registrada con éxito.");
+            }
         }
 
         function openSaldoInicialModal() { document.getElementById('modalSaldoInicial').classList.remove('hidden'); }
