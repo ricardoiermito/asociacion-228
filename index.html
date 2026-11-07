@@ -292,7 +292,7 @@
                             <h2 class="text-base font-bold text-slate-900">Estado Financiero y Operativo</h2>
                             <p class="text-xs text-slate-500">Base de datos en la nube (Firebase Firestore)</p>
                         </div>
-                        <button onclick="openMovimientoModal()" class="only-tesorero px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors no-print">
+                        <button onclick="openMovimientoModal()" class="only-gestor-usuarios px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors no-print">
                             <i class="fa-solid fa-plus"></i> Registrar Movimiento
                         </button>
                     </div>
@@ -496,7 +496,7 @@
                             <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-user-gear text-appRed mr-2"></i>Gestión Integral de Usuarios y Padrón</h2>
                             <p class="text-xs text-slate-500">Alta manual, modificación de datos de perfil, email y asignación de roles</p>
                         </div>
-                        <button onclick="openCrearUsuarioManualModal()" class="only-tesorero px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow transition-colors no-print">
+                        <button onclick="openCrearUsuarioManualModal()" class="only-gestor-usuarios px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow transition-colors no-print">
                             <i class="fa-solid fa-user-plus mr-1"></i> Agregar Usuario Manualmente
                         </button>
                     </div>
@@ -1214,7 +1214,7 @@
                 tabKey = 'miperfil';
             }
 
-            if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Presidente' && rol !== 'Revisor de Cuentas')) {
+            if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Presidente' && rol !== 'Secretario' && rol !== 'Revisor de Cuentas')) {
                 alert("ACCESO RESTRINGIDO: Solo la Comisión Directiva autorizada puede acceder a la gestión de usuarios.");
                 tabKey = (rol === 'Socio' || rol === 'Pendiente') ? 'miperfil' : 'dashboard';
             }
@@ -1275,7 +1275,18 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Presidente' || rol === 'Secretario' || rol === 'Vocal') {
+            } else if (rol === 'Presidente' || rol === 'Secretario') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
+            } else if (rol === 'Vocal') {
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
@@ -1285,6 +1296,7 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.add('hidden'));
             } else if (rol === 'Tesorero') {
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
@@ -1295,6 +1307,7 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
             }
         }
 
@@ -1533,10 +1546,10 @@
                         </span>
                     </td>
                     <td class="p-3 text-center space-x-1 no-print">
-                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-tesorero px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
-                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-tesorero px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
-                        <button onclick="openEditUsuarioModal(${index})" class="only-tesorero px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
-                        <button onclick="darDeBajaUsuario(${index})" class="only-tesorero px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
+                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
+                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
+                        <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
+                        <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
                     </td>
                 </tr>
                 `;
@@ -1544,7 +1557,7 @@
         }
 
         function darDeBajaUsuario(index) {
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: No tenés permisos para dar de baja usuarios.");
                 return;
             }
@@ -1573,7 +1586,7 @@
 
         // FUNCIONES DE EDICIÓN DE PERFIL, EMAIL Y ELIMINACIÓN DEFINITIVA
         function openEditUsuarioModal(index) {
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: Tu rol (${currentUser ? currentUser.role : 'Invitado'}) no tiene permisos de modificación de usuarios ni asignación de roles (Función exclusiva de Tesorería/Presidencia).");
                 return;
             }
@@ -1661,7 +1674,7 @@
         }
 
         function openCrearUsuarioManualModal() { 
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: No tenés permisos para agregar usuarios manualmente.");
                 return;
             }
@@ -1697,7 +1710,7 @@
         }
 
         function aprobarUsuario(index) {
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: No tenés permisos para aprobar socios.");
                 return;
             }
