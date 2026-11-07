@@ -1267,7 +1267,7 @@
             renderFirmas();
         }
 
-        function aplicarPermisosPorRol() {
+                function aplicarPermisosPorRol() {
             if (!currentUser) return;
             const rol = currentUser.role || 'Socio';
 
@@ -1279,6 +1279,14 @@
             const navArqueo = document.getElementById('nav-arqueo');
             const navMiPerfil = document.getElementById('nav-miperfil');
 
+            const isComision = ['Presidente', 'Tesorero', 'Secretario', 'Revisor de Cuentas', 'Vocal'].includes(rol);
+
+            if (isComision) {
+                document.querySelectorAll('.only-comision').forEach(el => el.classList.remove('hidden'));
+            } else {
+                document.querySelectorAll('.only-comision').forEach(el => el.classList.add('hidden'));
+            }
+
             if (rol === 'Socio' || rol === 'Pendiente') {
                 if (navDashboard) navDashboard.classList.add('hidden');
                 if (navCaja) navCaja.classList.add('hidden');
@@ -1289,11 +1297,55 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('.only-comision').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
-            } else {
-                document.querySelectorAll('.only-comision').forEach(el => el.classList.remove('hidden'));
             } else if (rol === 'Revisor de Cuentas') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+            } else if (rol === 'Presidente' || rol === 'Secretario') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
+            } else if (rol === 'Vocal') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.add('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.add('hidden'));
+            } else if (rol === 'Tesorero') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
+            }
+        } else {
+                document.querySelectorAll('.only-comision').forEach(el => el.classList.remove('hidden'));
+                
+                if (rol === 'Revisor de Cuentas') {
                 // REVISOR DE CUENTAS: LECTURA TOTAL Y DESCARGAS
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
