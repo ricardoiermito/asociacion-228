@@ -618,6 +618,7 @@
                         <option value="Pendiente">Pendiente</option>
                         <option value="Tesorero">Tesorero</option>
                         <option value="Presidente">Presidente</option>
+                        <option value="Secretario">Secretario</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
                         <option value="Inactivo">Inactivo (Baja Lógica)</option>
                     </select>
@@ -835,6 +836,7 @@
                         <option value="Socio" selected>Socio</option>
                         <option value="Presidente">Presidente</option>
                         <option value="Tesorero">Tesorero</option>
+                        <option value="Secretario">Secretario</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
                     </select>
                 </div>
@@ -1273,7 +1275,7 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Presidente' || rol === 'Vocal') {
+            } else if (rol === 'Presidente' || rol === 'Secretario' || rol === 'Vocal') {
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
@@ -1342,7 +1344,7 @@
             const btnBox = document.getElementById('btnFirmarBox');
             if (!container) return;
 
-            const rolesComision = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
+            const rolesComision = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
             
             container.innerHTML = rolesComision.map(rol => {
                 let firmaEncontrada = dbFirmas.find(f => f.rol === rol);
@@ -1379,7 +1381,7 @@
             if (!currentUser) return;
             let rolActual = currentUser.role;
 
-            const rolesAutorizados = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
+            const rolesAutorizados = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
             if (!rolesAutorizados.includes(rolActual)) {
                 alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma en actas y balances de la Asociación.");
                 return;
@@ -1542,6 +1544,10 @@
         }
 
         function darDeBajaUsuario(index) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+                alert("ACCESO DENEGADO: No tenés permisos para dar de baja usuarios.");
+                return;
+            }
             let u = dbUsers[index];
             if (confirm(`¿Deseas dar de baja (inactivar) a ${u.nombre} ${u.apellido}? Se conservará todo su historial.`)) {
                 u.role = 'Inactivo';
@@ -1567,6 +1573,10 @@
 
         // FUNCIONES DE EDICIÓN DE PERFIL, EMAIL Y ELIMINACIÓN DEFINITIVA
         function openEditUsuarioModal(index) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+                alert("ACCESO DENEGADO: Tu rol (${currentUser ? currentUser.role : 'Invitado'}) no tiene permisos de modificación de usuarios ni asignación de roles (Función exclusiva de Tesorería/Presidencia).");
+                return;
+            }
             let u = dbUsers[index];
             document.getElementById('editUserIndex').value = index;
             document.getElementById('editUserNombre').value = u.nombre || '';
@@ -1613,6 +1623,10 @@
         }
 
         function eliminarDefinitivamenteUsuario() {
+            if (!currentUser || currentUser.role !== 'Tesorero') {
+                alert("ACCESO DENEGADO: La eliminación definitiva de registros es una atribución exclusiva del Tesorero.");
+                return;
+            }
             let i = document.getElementById('editUserIndex').value;
             let u = dbUsers[i];
 
@@ -1646,7 +1660,13 @@
             renderAll();
         }
 
-        function openCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); }
+        function openCrearUsuarioManualModal() { 
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+                alert("ACCESO DENEGADO: No tenés permisos para agregar usuarios manualmente.");
+                return;
+            }
+            document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); 
+        }
         function closeCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.add('hidden'); }
 
         function saveUsuarioManual(e) {
@@ -1677,6 +1697,10 @@
         }
 
         function aprobarUsuario(index) {
+            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente')) {
+                alert("ACCESO DENEGADO: No tenés permisos para aprobar socios.");
+                return;
+            }
             dbUsers[index].role = 'Socio';
             let u = dbUsers[index];
             if (isFirebaseReady && u.idDoc) {
