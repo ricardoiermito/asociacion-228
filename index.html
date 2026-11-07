@@ -593,6 +593,12 @@
             firebase.firestore().collection('usuarios').doc(uid).get().then(doc => {
                 if (doc.exists) {
                     currentUser = doc.data();
+                    
+                    // SI ES EL MAIL DEL ADMINISTRADOR PRINCIPAL, SE LE DA ROL TESORERO AUTOMÁTICAMENTE
+                    if (currentUser.email === 'ricardoiermito@gmail.com') {
+                        currentUser.role = 'Tesorero';
+                    }
+
                     if (currentUser.role === 'Pendiente') {
                         alert("Tu cuenta aún está pendiente de aprobación por la Comisión Directiva.");
                         firebase.auth().signOut();
@@ -603,6 +609,20 @@
                     document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
                     document.getElementById('displayRoleBadge').textContent = currentUser.role;
                     renderAll();
+                } else {
+                    if (firebase.auth().currentUser && firebase.auth().currentUser.email === 'ricardoiermito@gmail.com') {
+                        currentUser = {
+                            nombre: 'Ricardo',
+                            apellido: 'Iermito',
+                            email: 'ricardoiermito@gmail.com',
+                            role: 'Tesorero'
+                        };
+                        document.getElementById('authContainer').classList.add('hidden');
+                        document.getElementById('appScreen').classList.remove('hidden');
+                        document.getElementById('displayUsername').textContent = 'Ricardo Iermito';
+                        document.getElementById('displayRoleBadge').textContent = 'Tesorero';
+                        renderAll();
+                    }
                 }
             });
         }
