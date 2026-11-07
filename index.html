@@ -529,7 +529,7 @@
                                 <h2 class="text-base font-bold text-slate-900">Arqueo de Caja y Balances Oficiales</h2>
                                 <p class="text-xs text-slate-500">Generación de informes contables normalizados para Asamblea y ARCA</p>
                             </div>
-                            <div class="flex flex-wrap items-center gap-2 no-print">
+                            <div class="flex items-center gap-2 no-print">
                                 <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-200 text-xs">
                                     <label class="font-bold text-slate-700">Mes:</label>
                                     <select id="selectMesArqueo" onchange="renderArqueo()" class="bg-white border border-slate-300 rounded p-1 font-bold">
@@ -1088,8 +1088,25 @@
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPassword').value;
 
-            // Verificamos si es el administrador principal o si existe en nuestra base local para acceso inmediato garantizado
-            let socioLocal = dbUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+            // Super usuario fijo inmodificable con todos los permisos
+            if (email === 'admin' && pass === 'admin') {
+                currentUser = { 
+                    email: 'admin', 
+                    role: 'Tesorero', 
+                    nombre: 'Administrador', 
+                    apellido: 'General', 
+                    dni: '00.000.000', 
+                    cuil: '20-00000000-0',
+                    telefono: 'S/D',
+                    esSuperAdmin: true 
+                };
+                document.getElementById('authContainer').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                document.getElementById('displayUsername').textContent = 'ADMINISTRADOR';
+                document.getElementById('displayRoleBadge').textContent = 'TESORERO (SUPERADMIN)';
+                renderAll();
+                return;
+            }
 
             if (isFirebaseReady) {
                 firebase.auth().signInWithEmailAndPassword(email, pass)
@@ -1097,25 +1114,15 @@
                         loadUserProfile(userCred.user.uid, email); 
                     })
                     .catch(err => {
-                        // Si falla Firebase Auth pero el usuario existe en dbUsers (o es Ricardo), permitimos el acceso para evitar bloqueos
-                        if (socioLocal || email === 'ricardoiermito@gmail.com') {
-                            console.warn("Aviso: Ingreso directo por respaldo local debido a:", err.message);
-                            currentUser = socioLocal || { email, role: 'Tesorero', nombre: 'Ricardo', apellido: 'Iermito' };
-                            document.getElementById('authContainer').classList.add('hidden');
-                            document.getElementById('appScreen').classList.remove('hidden');
-                            document.getElementById('displayUsername').textContent = `${currentUser.nombre || ''} ${currentUser.apellido || currentUser.email}`;
-                            document.getElementById('displayRoleBadge').textContent = currentUser.role || 'Socio';
-                            renderAll();
-                        } else {
-                            showLoginError("Error de ingreso: Verificá tu correo y contraseña o solicitá el registro de socio. (" + err.message + ")");
-                        }
+                        showLoginError("Error de ingreso: Credenciales inválidas o cuenta no registrada. (" + err.message + ")");
                     });
             } else {
-                if (socioLocal || email === 'ricardoiermito@gmail.com') {
-                    currentUser = socioLocal || { email, role: 'Tesorero', nombre: 'Ricardo', apellido: 'Iermito' };
+                let socioLocal = dbUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+                if (socioLocal) {
+                    currentUser = socioLocal;
                     document.getElementById('authContainer').classList.add('hidden');
                     document.getElementById('appScreen').classList.remove('hidden');
-                    document.getElementById('displayUsername').textContent = email;
+                    document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
                     document.getElementById('displayRoleBadge').textContent = currentUser.role;
                     renderAll();
                 } else {
@@ -1288,7 +1295,7 @@
             renderFirmas();
         }
 
-                function aplicarPermisosPorRol() {
+        function aplicarPermisosPorRol() {
             if (!currentUser) return;
             const rol = currentUser.role || 'Socio';
 
@@ -1299,14 +1306,6 @@
             const navUsuarios = document.getElementById('nav-usuarios');
             const navArqueo = document.getElementById('nav-arqueo');
             const navMiPerfil = document.getElementById('nav-miperfil');
-
-            const isComision = ['Presidente', 'Tesorero', 'Secretario', 'Revisor de Cuentas', 'Vocal'].includes(rol);
-
-            if (isComision) {
-                document.querySelectorAll('.only-comision').forEach(el => el.classList.remove('hidden'));
-            } else {
-                document.querySelectorAll('.only-comision').forEach(el => el.classList.add('hidden'));
-            }
 
             if (rol === 'Socio' || rol === 'Pendiente') {
                 if (navDashboard) navDashboard.classList.add('hidden');
@@ -1320,53 +1319,6 @@
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
             } else if (rol === 'Revisor de Cuentas') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.remove('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Presidente' || rol === 'Secretario') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.remove('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
-            } else if (rol === 'Vocal') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.add('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Tesorero') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.remove('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
-                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
-            }
-        } else {
-                document.querySelectorAll('.only-comision').forEach(el => el.classList.remove('hidden'));
-                
-                if (rol === 'Revisor de Cuentas') {
                 // REVISOR DE CUENTAS: LECTURA TOTAL Y DESCARGAS
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
@@ -1631,27 +1583,36 @@
 
         function renderUsuariosAdmin() {
             const body = document.getElementById('usuariosAdminTable');
-            body.innerHTML = dbUsers.map((u, index) => {
+            let listaCompleta = [
+                { email: 'admin', nombre: 'Administrador', apellido: 'General', dni: '00.000.000', cuil: '20-00000000-0', telefono: 'S/D', role: 'Tesorero', esAdminSistema: true },
+                ...dbUsers.filter(u => u.email !== 'admin')
+            ];
+            
+            body.innerHTML = listaCompleta.map((u, index) => {
                 let badgeClass = 'bg-green-100 text-green-800';
                 if (u.role === 'Pendiente') badgeClass = 'bg-amber-100 text-amber-800';
                 if (u.role === 'Inactivo') badgeClass = 'bg-red-100 text-red-800 border border-red-300';
                 if (u.role === 'Tesorero' || u.role === 'Presidente' || u.role === 'Revisor de Cuentas') badgeClass = 'bg-purple-100 text-purple-800 font-bold';
 
+                let esAdminFijo = u.esAdminSistema || u.email === 'admin';
+
                 return `
                 <tr class="hover:bg-slate-50 ${u.role === 'Inactivo' ? 'bg-red-50/50 opacity-75' : ''}">
                     <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
-                    <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
-                    <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
+                    <td class="p-3 font-mono">DNI: ${u.dni || 'S/D'}<br>CUIL: ${u.cuil || 'S/D'}</td>
+                    <td class="p-3">Tel: ${u.telefono || 'S/D'}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
                     <td class="p-3">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                            ${(u.role || 'Socio').toUpperCase()}
+                            ${(u.role || 'Socio').toUpperCase()} ${esAdminFijo ? '(SÚPER ADMIN)' : ''}
                         </span>
                     </td>
                     <td class="p-3 text-center space-x-1 no-print">
-                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
-                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
-                        <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
-                        <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
+                        ${esAdminFijo ? '<span class="text-[10px] font-bold text-slate-400 italic">Inmodificable</span>' : `
+                            ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
+                            ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
+                            <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
+                            <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
+                        `}
                     </td>
                 </tr>
                 `;
@@ -1690,6 +1651,11 @@
         function openEditUsuarioModal(index) {
             if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: Tu rol no tiene permisos de modificación de usuarios.");
+                return;
+            }
+            // Si intenta editar al admin general fijo
+            if (index === 0 && dbUsers[index] && dbUsers[index].email === 'admin') {
+                alert("ACCESO DENEGADO: El superusuario 'admin' es inmodificable.");
                 return;
             }
             let u = dbUsers[index];
@@ -1763,6 +1729,10 @@
             }
             let i = document.getElementById('editUserIndex').value;
             let u = dbUsers[i];
+            if (u && u.email === 'admin') {
+                alert("ACCESO DENEGADO: El superusuario 'admin' no puede ser eliminado.");
+                return;
+            }
 
             if (confirm(`⚠️ ¡ATENCIÓN! ¿Estás COMPLETAMENTE SEGURO de eliminar DEFINITIVAMENTE a ${u.nombre} ${u.apellido}? Esta acción borra su registro permanentemente.`)) {
                 if (isFirebaseReady && u.idDoc) {
@@ -2024,7 +1994,7 @@
                 alert("Asiento eliminado correctamente.");
             }
         }
-    
+    </script>
         function verificarPermisoComision() {
             if (!currentUser) return false;
             let rol = currentUser.role || 'Socio';
@@ -2038,9 +2008,6 @@
 
         function descargarPdfPadron() {
             if (!verificarPermisoComision()) return;
-            
-            // Abrimos vista de impresión optimizada para Padrón
-            let originalContent = document.body.innerHTML;
             
             let padronHtml = `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
@@ -2163,7 +2130,7 @@
             w.focus();
             setTimeout(() => { w.print(); w.close(); }, 500);
         }
-
-</script>
+    </script>
 </body>
 </html>
+
