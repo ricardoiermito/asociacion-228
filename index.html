@@ -239,7 +239,7 @@
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
                         <div class="flex items-center justify-between border-b border-slate-200 pb-4">
                             <div>
-                                <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-user-check text-appGreen mr-2"></i>Estado de Socio / Miembro</h2>
+                                <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-user-check text-appGreen mr-2"></i>Estado de Socio</h2>
                                 <p class="text-xs text-slate-500">Información personal e historial de cuotas sociales</p>
                             </div>
                             <span id="miEstadoBadge" class="px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full uppercase">Socio Activo</span>
@@ -255,9 +255,9 @@
                                 <p class="text-slate-600">Teléfono: <span id="miPerfilTelefono" class="font-bold">---</span></p>
                             </div>
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 font-sans">
-                                <p class="text-slate-500 uppercase font-bold text-[11px]">Resumen General del Año:</p>
+                                <p class="text-slate-500 uppercase font-bold text-[11px]">Resumen de Cuotas Social ($1.000 / mes):</p>
                                 <div class="flex justify-between items-center bg-white p-3 rounded border border-slate-200">
-                                    <span class="text-slate-600 font-medium text-xs">Estado Actual (Mes en Curso):</span>
+                                    <span class="text-slate-600 font-medium text-xs">Año En Curso (2026):</span>
                                     <span id="miPerfilCuotasResumen" class="font-bold text-green-600 font-mono text-xs">AL DÍA</span>
                                 </div>
                                 <p class="text-[11px] text-slate-500 mt-2">Para regularizar cuotas o presentar comprobantes de pago, comunicate con Tesorería.</p>
@@ -265,16 +265,15 @@
                         </div>
                     </div>
 
-                    <!-- TABLA DETALLE DE CUOTAS REGISTRADAS -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden space-y-3 p-4">
-                        <h3 class="font-bold text-slate-800 text-xs uppercase"><i class="fa-solid fa-receipt text-appBlue mr-1"></i> Historial y Estado de los 12 Meses (Año 2026)</h3>
+                        <h3 class="font-bold text-slate-800 text-xs uppercase"><i class="fa-solid fa-receipt text-appBlue mr-1"></i> Historial de Cuotas Abonadas</h3>
                         <div class="overflow-x-auto">
                             <table class="w-full text-left text-xs font-mono">
                                 <thead class="bg-slate-900 text-white uppercase font-sans">
                                     <tr>
-                                        <th class="p-3">Mes del Período</th>
+                                        <th class="p-3">Período / Mes</th>
                                         <th class="p-3">Concepto Registrado</th>
-                                        <th class="p-3">Monto Abonado / Histórico</th>
+                                        <th class="p-3">Monto Abonado</th>
                                         <th class="p-3">Estado</th>
                                     </tr>
                                 </thead>
@@ -298,7 +297,6 @@
                         </button>
                     </div>
 
-                    <!-- METRICS GRID -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appBlue">
                             <p class="text-xs font-bold text-slate-500 uppercase">Saldo Actual en Caja</p>
@@ -316,13 +314,12 @@
                             <span class="text-[11px] text-slate-500">Fijos, Variables y Varios</span>
                         </div>
                         <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appYellow">
-                            <p class="text-xs font-bold text-slate-500 uppercase">Padron General al Día</p>
+                            <p class="text-xs font-bold text-slate-500 uppercase">Socios al Día / Total</p>
                             <p id="dashSociosCount" class="text-2xl font-bold font-mono text-slate-900 mt-1">0 / 0</p>
-                            <span class="text-[11px] text-slate-500">Socios + Comisión Directiva</span>
+                            <span class="text-[11px] text-slate-500">Padrón Completo</span>
                         </div>
                     </div>
 
-                    <!-- RECENT MOVEMENTS -->
                     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="p-3.5 bg-slate-50 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
                             <span><i class="fa-solid fa-list-check mr-1.5 text-appOrange"></i> ÚLTIMOS MOVIMIENTOS CONTABLES</span>
@@ -364,7 +361,6 @@
                         </div>
                     </div>
 
-                    <!-- BARRA DE FILTROS DE FECHAS -->
                     <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs no-print">
                         <span class="font-bold text-slate-700 uppercase"><i class="fa-solid fa-filter text-appOrange mr-1"></i> Filtrar por fechas:</span>
                         <div class="flex items-center gap-1">
@@ -402,12 +398,12 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: PADRÓN Y CUOTAS (INCLUYE SOCIOS Y COMISIÓN DIRECTIVA) -->
+                <!-- TAB 3: PADRÓN Y CUOTAS (INCLUYE COMISIÓN DIRECTIVA Y SOCIOS) -->
                 <div id="tab-cuotas" class="tab-pane hidden space-y-4">
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
                         <div>
-                            <h2 class="text-base font-bold text-slate-900">Padrón de Cuotas (Socios y Comisión Directiva)</h2>
-                            <p class="text-xs text-slate-500">Valor de Cuota Vigente: <span id="displayValorCuota" class="font-bold text-slate-900">$1.000,00</span> / mes</p>
+                            <h2 class="text-base font-bold text-slate-900">Gestión de Socios y Cobro de Cuotas</h2>
+                            <p class="text-xs text-slate-500">Valor de Cuota Vigente: <span id="displayValorCuota" class="font-bold text-slate-900">$1.000,00</span> / mes (Toda la Comisión Directiva abona cuota)</p>
                         </div>
                         <button onclick="openModificarCuotaModal()" class="only-tesorero px-3 py-2 bg-appYellow text-slate-900 font-bold text-xs rounded-lg shadow flex items-center gap-2 hover:bg-yellow-500 transition-colors no-print">
                             <i class="fa-solid fa-pen-to-square"></i> Modificar Valor de Cuota
@@ -420,9 +416,9 @@
                                 <thead class="bg-slate-900 text-white uppercase font-sans">
                                     <tr>
                                         <th class="p-3">DNI / CUIL</th>
-                                        <th class="p-3">Nombre y Rol</th>
-                                        <th class="p-3">Teléfono / Contacto</th>
-                                        <th class="p-3">Estado Cuota y Meses</th>
+                                        <th class="p-3">Nombre y Apellido</th>
+                                        <th class="p-3">Rol Institucional</th>
+                                        <th class="p-3">Estado Cuota (12 Meses)</th>
                                         <th class="p-3 text-center no-print">Acción Cobro</th>
                                     </tr>
                                 </thead>
@@ -493,12 +489,12 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: PANEL COMPLETO DE GESTIÓN DE USUARIOS -->
+                <!-- TAB 5: GESTIÓN DE USUARIOS -->
                 <div id="tab-usuarios" class="tab-pane hidden space-y-4">
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
                         <div>
                             <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-user-gear text-appRed mr-2"></i>Gestión Integral de Usuarios y Padrón</h2>
-                            <p class="text-xs text-slate-500">Alta manual, modificación de roles, y reactivación de usuarios dados de baja</p>
+                            <p class="text-xs text-slate-500">Alta manual, modificación de datos de perfil, email y asignación de roles</p>
                         </div>
                         <button onclick="openCrearUsuarioManualModal()" class="only-tesorero px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow transition-colors no-print">
                             <i class="fa-solid fa-user-plus mr-1"></i> Agregar Usuario Manualmente
@@ -525,7 +521,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 6: ARQUEO E INFORMES CONTABLES PDF -->
+                <!-- TAB 6: ARQUEO E INFORMES PDF -->
                 <div id="tab-arqueo" class="tab-pane hidden space-y-6">
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
                         <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-4 gap-3">
@@ -538,14 +534,13 @@
                             </button>
                         </div>
 
-                        <!-- RESUMEN DE ARQUEO EN PANTALLA -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
                                 <span class="text-slate-500 uppercase font-sans font-bold">Saldo Inicial Arrastrado:</span>
                                 <p id="arqueoSaldoInicial" class="text-xl font-bold text-slate-800 mt-1">$0,00</p>
                             </div>
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                                <span class="text-slate-500 uppercase font-sans font-bold">Superávit / Déficit Período:</span>
+                                <span class="text-slate-500 uppercase font-sans font-bold">Superávit / Defícit Período:</span>
                                 <p id="arqueoFlujoNeto" class="text-xl font-bold text-slate-800 mt-1">$0,00</p>
                             </div>
                             <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
@@ -559,7 +554,7 @@
                             <p class="text-xs text-slate-500 mb-4">Cada miembro autorizado puede emitir su firma digital de conformidad para el presente balance y arqueo (Excluye socios generales).</p>
                             
                             <div id="firmasConformidadContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                                <!-- Dinámico según firmas registradas -->
+                                <!-- Dinámico -->
                             </div>
 
                             <div id="btnFirmarBox" class="no-print bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
@@ -579,7 +574,69 @@
         </div>
     </div>
 
-    <!-- MODALES VARIOS -->
+    <!-- MODAL EDITAR PERFIL DE USUARIO, MAIL Y ROL CON ELIMINACIÓN DEFINITIVA -->
+    <div id="modalEditUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span>EDITAR DATOS, MAIL Y ROL DE USUARIO</span>
+                <button onclick="closeEditUsuarioModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveEditUsuario(event)" class="p-4 space-y-2.5 text-xs">
+                <input type="hidden" id="editUserIndex">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nombre</label>
+                        <input type="text" id="editUserNombre" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Apellido</label>
+                        <input type="text" id="editUserApellido" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">DNI</label>
+                        <input type="text" id="editUserDni" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">CUIL</label>
+                        <input type="text" id="editUserCuil" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Correo Electrónico (Email)</label>
+                    <input type="email" id="editUserEmail" class="w-full border border-slate-300 rounded p-1.5 font-mono" placeholder="usuario@correo.com" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Teléfono</label>
+                    <input type="text" id="editUserTelefono" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Asignar Rol / Estado</label>
+                    <select id="editUserRol" class="w-full border border-slate-300 rounded p-1.5 font-bold bg-slate-50">
+                        <option value="Socio">Socio</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Tesorero">Tesorero</option>
+                        <option value="Presidente">Presidente</option>
+                        <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                        <option value="Inactivo">Inactivo (Baja Lógica)</option>
+                    </select>
+                </div>
+                
+                <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
+                    <button type="button" onclick="eliminarDefinitivamenteUsuario()" class="only-tesorero px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white rounded font-bold text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-skull-crossbones"></i> Eliminación Definitiva
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeEditUsuarioModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                        <button type="submit" class="px-4 py-1.5 bg-appBlue text-white rounded font-bold">Guardar Cambios</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL MODIFICAR VALOR DE CUOTA -->
     <div id="modalModificarCuota" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-appYellow text-slate-900 px-4 py-3 flex justify-between items-center text-xs font-bold">
@@ -587,7 +644,7 @@
                 <button onclick="closeModificarCuotaModal()" class="text-slate-700 hover:text-black"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="saveNuevoValorCuota(event)" class="p-4 space-y-3 text-xs">
-                <p class="text-[11px] text-slate-500">Nota: Los pagos históricos registrados en caja conservarán el monto original con el que fueron abonados.</p>
+                <p class="text-[11px] text-slate-500">Nota: Los pagos históricos conservarán el monto abonado en su momento.</p>
                 <div>
                     <label class="block font-bold text-slate-700 mb-1">Nuevo Valor Vigente ($)</label>
                     <input type="number" id="inputNuevoValorCuota" min="1" step="50" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-sm" required>
@@ -600,6 +657,7 @@
         </div>
     </div>
 
+    <!-- MODAL REGISTRAR COBRO DE CUOTA CON SELECCIÓN DE MESES -->
     <div id="modalCobroMeses" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-appGreen text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
@@ -618,7 +676,7 @@
                 <div>
                     <label class="block font-bold text-slate-700 mb-2">Año 2026:</label>
                     <div id="checkboxesMeses" class="grid grid-cols-3 gap-2">
-                        <!-- Dynamic -->
+                        <!-- Checkboxes generados dinámicamente -->
                     </div>
                 </div>
 
@@ -635,6 +693,7 @@
         </div>
     </div>
 
+    <!-- MODAL NUEVO MOVIMIENTO -->
     <div id="modalMovimiento" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-slate-900 text-white px-4 py-3.5 flex justify-between items-center text-xs font-bold">
@@ -682,6 +741,7 @@
         </div>
     </div>
 
+    <!-- MODAL SALDO INICIAL ANTERIOR -->
     <div id="modalSaldoInicial" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
@@ -701,6 +761,7 @@
         </div>
     </div>
 
+    <!-- MODAL EDITAR DATOS ENTIDAD -->
     <div id="modalEditEntidad" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-appVioletDark text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
@@ -732,6 +793,7 @@
         </div>
     </div>
 
+    <!-- MODAL CREAR USUARIO MANUAL -->
     <div id="modalCrearUsuarioManual" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-appGreen text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
@@ -774,7 +836,6 @@
                         <option value="Presidente">Presidente</option>
                         <option value="Tesorero">Tesorero</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
-                        <option value="Vocal">Vocal</option>
                     </select>
                 </div>
                 <div class="pt-2 border-t border-slate-200 flex justify-end gap-2">
@@ -785,58 +846,7 @@
         </div>
     </div>
 
-    <div id="modalEditUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
-        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
-            <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
-                <span>EDITAR DATOS Y ROL DE USUARIO</span>
-                <button onclick="closeEditUsuarioModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <form onsubmit="saveEditUsuario(event)" class="p-4 space-y-2.5 text-xs">
-                <input type="hidden" id="editUserIndex">
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Nombre</label>
-                        <input type="text" id="editUserNombre" class="w-full border border-slate-300 rounded p-1.5" required>
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">Apellido</label>
-                        <input type="text" id="editUserApellido" class="w-full border border-slate-300 rounded p-1.5" required>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">DNI</label>
-                        <input type="text" id="editUserDni" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
-                    </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">CUIL</label>
-                        <input type="text" id="editUserCuil" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
-                    </div>
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Teléfono</label>
-                    <input type="text" id="editUserTelefono" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Asignar Rol / Estado</label>
-                    <select id="editUserRol" class="w-full border border-slate-300 rounded p-1.5 font-bold bg-slate-50">
-                        <option value="Socio">Socio</option>
-                        <option value="Pendiente">Pendiente</option>
-                        <option value="Inactivo">Inactivo (Dado de Baja)</option>
-                        <option value="Tesorero">Tesorero</option>
-                        <option value="Presidente">Presidente</option>
-                        <option value="Revisor de Cuentas">Revisor de Cuentas</option>
-                        <option value="Vocal">Vocal</option>
-                    </select>
-                </div>
-                <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
-                    <button type="button" onclick="closeEditUsuarioModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
-                    <button type="submit" class="px-4 py-1.5 bg-appBlue text-white rounded font-bold">Guardar Cambios</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <!-- MODAL REGISTRAR NUEVA ACTA EN PDF -->
     <div id="modalNuevaActa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-appRed text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
@@ -948,11 +958,6 @@
         }
 
         function openCobroMesesModal(dni, nombreCompleto) {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO (REVISOR DE CUENTAS): Podés auditar y consultar todos los datos del sistema pero tenés restringidas las acciones de cobro y registro.");
-                return;
-            }
-
             document.getElementById('cobroSocioDni').value = dni;
             document.getElementById('cobroSocioNombre').value = nombreCompleto;
             document.getElementById('cobroSocioTitle').textContent = nombreCompleto;
@@ -987,11 +992,6 @@
 
         function confirmarCobroMeses(e) {
             e.preventDefault();
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: Modo auditoría sin permisos de escritura.");
-                return;
-            }
-
             let nombreCompleto = document.getElementById('cobroSocioNombre').value;
             let seleccionados = Array.from(document.querySelectorAll('input[name="mesCobro"]:checked:not(:disabled)')).map(c => c.value);
 
@@ -1108,7 +1108,14 @@
             firebase.firestore().collection('usuarios').onSnapshot(snapshot => {
                 let tempUsers = [];
                 snapshot.forEach(doc => {
-                    tempUsers.push({ idDoc: doc.id, ...doc.data() });
+                    const uData = { idDoc: doc.id, ...doc.data() };
+                    tempUsers.push(uData);
+
+                    if (currentUser && (doc.id === currentUser.idDoc || uData.email === currentUser.email)) {
+                        currentUser = { ...currentUser, ...uData };
+                        document.getElementById('displayRoleBadge').textContent = currentUser.role || 'Socio';
+                        document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+                    }
                 });
                 if (tempUsers.length > 0) {
                     dbUsers = tempUsers;
@@ -1147,27 +1154,14 @@
 
         function handleRegister(e) {
             e.preventDefault();
-            const email = document.getElementById('regEmail').value.trim();
-            const dni = document.getElementById('regDni').value.trim();
-
-            let exist = dbUsers.find(u => u.email === email || u.dni === dni);
-            if (exist) {
-                if (exist.role === 'Inactivo') {
-                    alert("Tus datos ya se encuentran en el sistema en estado Inactivo. El Tesorero debe reactivar tu cuenta desde la Gestión de Usuarios.");
-                } else {
-                    alert("Ya existe un usuario registrado con este Email o DNI.");
-                }
-                return;
-            }
-
             const userData = {
                 nombre: document.getElementById('regNombre').value,
                 apellido: document.getElementById('regApellido').value,
-                dni: dni,
+                dni: document.getElementById('regDni').value,
                 cuil: document.getElementById('regCuil').value,
                 direccion: document.getElementById('regDireccion').value,
                 telefono: document.getElementById('regTelefono').value,
-                email: email,
+                email: document.getElementById('regEmail').value.trim(),
                 role: 'Pendiente'
             };
             const pass = document.getElementById('regPassword').value;
@@ -1213,13 +1207,13 @@
             if (!currentUser) return;
             let rol = currentUser.role || 'Socio';
 
-            if ((rol === 'Socio' || rol === 'Pendiente' || rol === 'Inactivo') && tabKey !== 'miperfil') {
+            if ((rol === 'Socio' || rol === 'Pendiente') && tabKey !== 'miperfil') {
                 alert("ACCESO RESTRINGIDO: Los socios solo tienen permiso para ver su estado de socio e historial de cuotas.");
                 tabKey = 'miperfil';
             }
 
             if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Presidente' && rol !== 'Revisor de Cuentas')) {
-                alert("ACCESO RESTRINGIDO: Solo la Comisión Directiva y el Revisor de Cuentas pueden acceder a la gestión de usuarios.");
+                alert("ACCESO RESTRINGIDO: Solo la Comisión Directiva autorizada puede acceder a la gestión de usuarios.");
                 tabKey = (rol === 'Socio' || rol === 'Pendiente') ? 'miperfil' : 'dashboard';
             }
 
@@ -1257,7 +1251,7 @@
             const navArqueo = document.getElementById('nav-arqueo');
             const navMiPerfil = document.getElementById('nav-miperfil');
 
-            if (rol === 'Socio' || rol === 'Pendiente' || rol === 'Inactivo') {
+            if (rol === 'Socio' || rol === 'Pendiente') {
                 if (navDashboard) navDashboard.classList.add('hidden');
                 if (navCaja) navCaja.classList.add('hidden');
                 if (navCuotas) navCuotas.classList.add('hidden');
@@ -1269,7 +1263,7 @@
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
             } else if (rol === 'Revisor de Cuentas') {
-                // EL REVISOR DE CUENTAS PUEDE VER ABSOLUTAMENTE TODO Y DESCARGAR, PERO SIN ACCIONES DE EDICIÓN/MODIFICACIÓN
+                // REVISOR DE CUENTAS: LECTURA TOTAL Y DESCARGAS
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
@@ -1373,7 +1367,7 @@
             }).join('');
 
             if (btnBox && currentUser) {
-                if (currentUser.role === 'Socio' || currentUser.role === 'Pendiente' || currentUser.role === 'Inactivo') {
+                if (currentUser.role === 'Socio' || currentUser.role === 'Pendiente') {
                     btnBox.classList.add('hidden');
                 } else {
                     btnBox.classList.remove('hidden');
@@ -1387,7 +1381,7 @@
 
             const rolesAutorizados = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
             if (!rolesAutorizados.includes(rolActual)) {
-                alert("ACCESO DENEGADO: Solo los miembros autorizados de la Comisión Directiva pueden firmar actas y balances.");
+                alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma en actas y balances de la Asociación.");
                 return;
             }
 
@@ -1437,8 +1431,6 @@
             let totalIngresos = 0;
             let totalEgresos = 0;
 
-            let esRevisor = (currentUser && currentUser.role === 'Revisor de Cuentas');
-
             body.innerHTML = filtrados.map(m => {
                 if (m.tipo === 'ingreso') totalIngresos += m.monto;
                 if (m.tipo === 'egreso') totalEgresos += m.monto;
@@ -1452,7 +1444,7 @@
                         <td class="p-3 text-right font-bold text-green-600">${m.tipo === 'ingreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
                         <td class="p-3 text-right font-bold text-red-600">${m.tipo === 'egreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
                         <td class="p-3 text-center action-col no-print">
-                            ${!esRevisor ? `<button onclick="deleteMovimiento(${m.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>` : `<span class="text-[10px] text-slate-400 italic">Auditoría</span>`}
+                            <button onclick="deleteMovimiento(${m.id})" class="only-tesorero text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -1480,18 +1472,14 @@
             renderCaja();
         }
 
-        // RENDER DE PADRÓN DE CUOTAS (INCLUYE SOCIOS Y MIEMBROS DE LA COMISIÓN DIRECTIVA)
         function renderSocios() {
             const body = document.getElementById('sociosTableBody');
             const displayCuota = document.getElementById('displayValorCuota');
             if (displayCuota) displayCuota.textContent = '$' + valorCuotaSocial.toLocaleString('es-AR');
 
-            // INCLUSIÓN GENERAL: Todos los miembros activos (Socio, Presidente, Tesorero, Revisor, Vocal) pagan la cuota
-            const rolesPagadores = ['Socio', 'Presidente', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
-            const sociosList = dbUsers.filter(u => rolesPagadores.includes(u.role));
+            // INCLUSIÓN: Tanto Socios como la Comisión Directiva figuran para abonar la cuota
+            const sociosList = dbUsers.filter(u => u.role !== 'Inactivo' && u.role !== 'Pendiente');
             let sociosAlDiaCount = 0;
-
-            let esRevisor = (currentUser && currentUser.role === 'Revisor de Cuentas');
 
             body.innerHTML = sociosList.map(s => {
                 let nombreCompleto = `${s.nombre} ${s.apellido}`;
@@ -1503,23 +1491,19 @@
                     return `<span class="px-1 py-0.5 text-[9px] font-bold rounded ${pago ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-slate-100 text-slate-400'}" title="${m}">${m.substring(0,3)}</span>`;
                 }).join(' ');
 
-                let roleBadge = (s.role !== 'Socio') ? `<span class="ml-1 text-[9px] px-1.5 py-0.2 bg-purple-100 text-purple-800 font-bold rounded uppercase">${s.role}</span>` : '';
-
                 return `
                     <tr class="hover:bg-slate-50">
                         <td class="p-3 font-bold text-slate-600">${s.dni}</td>
-                        <td class="p-3 font-bold text-slate-900 font-sans">${nombreCompleto} ${roleBadge}</td>
-                        <td class="p-3 text-slate-600 font-sans">${s.telefono}</td>
+                        <td class="p-3 font-bold text-slate-900 font-sans">${nombreCompleto}</td>
+                        <td class="p-3 text-slate-600 font-sans"><span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold text-[10px]">${s.role}</span></td>
                         <td class="p-3 space-y-1">
                             <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${res.colorClass}">${res.estado}</span>
                             <div class="flex flex-wrap gap-1 mt-1">${badgesMeses}</div>
                         </td>
                         <td class="p-3 text-center font-sans no-print">
-                            ${!esRevisor ? `
-                                <button onclick="openCobroMesesModal('${s.dni}', '${nombreCompleto}')" class="only-tesorero px-2.5 py-1.5 bg-appGreen hover:bg-green-700 text-white rounded-lg font-bold text-[11px] shadow">
-                                    <i class="fa-solid fa-cash-register mr-1"></i> Cobrar Cuota ($${valorCuotaSocial.toLocaleString('es-AR')})
-                                </button>
-                            ` : `<span class="text-[10px] text-slate-400 italic">Sólo Lectura</span>`}
+                            <button onclick="openCobroMesesModal('${s.dni}', '${nombreCompleto}')" class="only-tesorero px-2.5 py-1.5 bg-appGreen hover:bg-green-700 text-white rounded-lg font-bold text-[11px] shadow">
+                                <i class="fa-solid fa-cash-register mr-1"></i> Cobrar Cuota
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -1528,80 +1512,122 @@
             document.getElementById('dashSociosCount').textContent = `${sociosAlDiaCount} / ${sociosList.length}`;
         }
 
-        // RENDER DE USUARIOS CON PERMISOS DE LECTURA / AUDITORÍA PARA REVISOR DE CUENTAS
         function renderUsuariosAdmin() {
             const body = document.getElementById('usuariosAdminTable');
-            let esRevisor = (currentUser && currentUser.role === 'Revisor de Cuentas');
-
             body.innerHTML = dbUsers.map((u, index) => {
-                let esInactivo = (u.role === 'Inactivo');
                 let badgeClass = 'bg-green-100 text-green-800';
                 if (u.role === 'Pendiente') badgeClass = 'bg-amber-100 text-amber-800';
-                if (esInactivo) badgeClass = 'bg-red-100 text-red-800 font-bold border border-red-300';
-                if (['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'].includes(u.role)) badgeClass = 'bg-purple-100 text-purple-800 font-bold';
+                if (u.role === 'Inactivo') badgeClass = 'bg-red-100 text-red-800 border border-red-300';
+                if (u.role === 'Tesorero' || u.role === 'Presidente' || u.role === 'Revisor de Cuentas') badgeClass = 'bg-purple-100 text-purple-800 font-bold';
 
                 return `
-                    <tr class="hover:bg-slate-50 ${esInactivo ? 'bg-red-50/40 opacity-80' : ''}">
-                        <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
-                        <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
-                        <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
-                        <td class="p-3">
-                            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                                ${u.role.toUpperCase()}
-                            </span>
-                        </td>
-                        <td class="p-3 text-center space-x-1 no-print">
-                            ${esRevisor ? `<span class="text-[10px] text-slate-400 italic"><i class="fa-solid fa-eye mr-1"></i> Auditado</span>` : `
-                                ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
-                                ${esInactivo ? `<button onclick="reactivarUsuario(${index})" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold mr-1"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
-                                <button onclick="openEditUsuarioModal(${index})" class="px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar / Cambiar Rol"><i class="fa-solid fa-pen"></i> Editar</button>
-                                ${!esInactivo ? `<button onclick="darDeBajaUsuario(${index})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Dar de baja sin borrar historial"><i class="fa-solid fa-user-slash"></i> Dar de Baja</button>` : ''}
-                            `}
-                        </td>
-                    </tr>
+                <tr class="hover:bg-slate-50 ${u.role === 'Inactivo' ? 'bg-red-50/50 opacity-75' : ''}">
+                    <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
+                    <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
+                    <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                            ${(u.role || 'Socio').toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center space-x-1 no-print">
+                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-tesorero px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
+                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-tesorero px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
+                        <button onclick="openEditUsuarioModal(${index})" class="only-tesorero px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
+                        <button onclick="darDeBajaUsuario(${index})" class="only-tesorero px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
+                    </td>
+                </tr>
                 `;
             }).join('');
         }
 
         function darDeBajaUsuario(index) {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: El Revisor de Cuentas no posee permisos para modificar usuarios.");
-                return;
-            }
             let u = dbUsers[index];
-            if (confirm(`¿Confirmás dar de baja a ${u.nombre} ${u.apellido}? Su historial contable y cuotas abonadas se mantendrán intactos en la base de datos.`)) {
-                dbUsers[index].role = 'Inactivo';
+            if (confirm(`¿Deseas dar de baja (inactivar) a ${u.nombre} ${u.apellido}? Se conservará todo su historial.`)) {
+                u.role = 'Inactivo';
                 if (isFirebaseReady && u.idDoc) {
                     firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Inactivo' })
-                        .then(() => console.log("Usuario inactivo en Firestore"));
+                        .then(() => console.log("Usuario inactivado en Firestore"));
                 }
                 renderAll();
-                alert(`El usuario ${u.nombre} ha pasado a estado INACTIVO. Podrás reactivarlo en cualquier momento.`);
             }
         }
 
         function reactivarUsuario(index) {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: El Revisor de Cuentas no posee permisos de modificación.");
-                return;
-            }
             let u = dbUsers[index];
-            if (confirm(`¿Deseas reactivar la cuenta de ${u.nombre} ${u.apellido} como Socio activo?`)) {
-                dbUsers[index].role = 'Socio';
+            if (confirm(`¿Deseas reactivar al usuario ${u.nombre} ${u.apellido} como Socio activo?`)) {
+                u.role = 'Socio';
                 if (isFirebaseReady && u.idDoc) {
                     firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
                         .then(() => console.log("Usuario reactivado en Firestore"));
                 }
                 renderAll();
-                alert(`La cuenta de ${u.nombre} ${u.apellido} fue reactivada exitosamente.`);
+            }
+        }
+
+        // FUNCIONES DE EDICIÓN DE PERFIL, EMAIL Y ELIMINACIÓN DEFINITIVA
+        function openEditUsuarioModal(index) {
+            let u = dbUsers[index];
+            document.getElementById('editUserIndex').value = index;
+            document.getElementById('editUserNombre').value = u.nombre || '';
+            document.getElementById('editUserApellido').value = u.apellido || '';
+            document.getElementById('editUserDni').value = u.dni || '';
+            document.getElementById('editUserCuil').value = u.cuil || '';
+            document.getElementById('editUserEmail').value = u.email || '';
+            document.getElementById('editUserTelefono').value = u.telefono || '';
+            document.getElementById('editUserRol').value = u.role || 'Socio';
+            document.getElementById('modalEditUsuario').classList.remove('hidden');
+        }
+
+        function closeEditUsuarioModal() {
+            document.getElementById('modalEditUsuario').classList.add('hidden');
+        }
+
+        function saveEditUsuario(e) {
+            e.preventDefault();
+            let i = document.getElementById('editUserIndex').value;
+            let u = dbUsers[i];
+
+            u.nombre = document.getElementById('editUserNombre').value;
+            u.apellido = document.getElementById('editUserApellido').value;
+            u.dni = document.getElementById('editUserDni').value;
+            u.cuil = document.getElementById('editUserCuil').value;
+            u.email = document.getElementById('editUserEmail').value.trim();
+            u.telefono = document.getElementById('editUserTelefono').value;
+            u.role = document.getElementById('editUserRol').value;
+
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({
+                    nombre: u.nombre,
+                    apellido: u.apellido,
+                    dni: u.dni,
+                    cuil: u.cuil,
+                    email: u.email,
+                    telefono: u.telefono,
+                    role: u.role
+                }).then(() => alert("Datos de usuario y correo actualizados con éxito."));
+            }
+
+            closeEditUsuarioModal();
+            renderAll();
+        }
+
+        function eliminarDefinitivamenteUsuario() {
+            let i = document.getElementById('editUserIndex').value;
+            let u = dbUsers[i];
+
+            if (confirm(`⚠️ ¡ATENCIÓN! ¿Estás COMPLETAMENTE SEGURO de eliminar DEFINITIVAMENTE a ${u.nombre} ${u.apellido}? Esta acción borra su registro permanentemente.`)) {
+                if (isFirebaseReady && u.idDoc) {
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).delete()
+                        .then(() => alert("Usuario eliminado definitivamente de la base de datos Firestore."));
+                }
+                dbUsers.splice(i, 1);
+                closeEditUsuarioModal();
+                renderAll();
             }
         }
 
         function openEditEntidadModal() {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: El Revisor de Cuentas únicamente tiene permisos de consulta y descarga.");
-                return;
-            }
             document.getElementById('editEntNombre').value = entidadDatos.nombre;
             document.getElementById('editEntCuit').value = entidadDatos.cuit;
             document.getElementById('editEntPresidente').value = entidadDatos.presidente;
@@ -1620,36 +1646,17 @@
             renderAll();
         }
 
-        function openCrearUsuarioManualModal() {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: Permisos restringidos a modo auditoría.");
-                return;
-            }
-            document.getElementById('modalCrearUsuarioManual').classList.remove('hidden');
-        }
+        function openCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); }
         function closeCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.add('hidden'); }
 
         function saveUsuarioManual(e) {
             e.preventDefault();
-            const email = document.getElementById('manEmail').value.trim();
-            const dni = document.getElementById('manDni').value.trim();
-
-            let exist = dbUsers.find(u => u.email === email || u.dni === dni);
-            if (exist) {
-                if (exist.role === 'Inactivo') {
-                    alert(`El DNI/Email ingresado pertenece al usuario INACTIVO ${exist.nombre} ${exist.apellido}. Podés reactivarlo directamente desde la lista sin duplicar sus datos.`);
-                } else {
-                    alert("Ya existe un usuario en el padrón con ese Email o DNI.");
-                }
-                return;
-            }
-
             const nuevoUsr = {
                 nombre: document.getElementById('manNombre').value,
                 apellido: document.getElementById('manApellido').value,
-                dni: dni,
+                dni: document.getElementById('manDni').value,
                 cuil: document.getElementById('manCuil').value,
-                email: email,
+                email: document.getElementById('manEmail').value.trim(),
                 telefono: document.getElementById('manTelefono').value,
                 role: document.getElementById('manRol').value,
                 fechaRegistro: new Date().toISOString().split('T')[0]
@@ -1669,55 +1676,7 @@
             }
         }
 
-        function openEditUsuarioModal(index) {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: Modo auditoría sin permisos de escritura.");
-                return;
-            }
-            let u = dbUsers[index];
-            document.getElementById('editUserIndex').value = index;
-            document.getElementById('editUserNombre').value = u.nombre;
-            document.getElementById('editUserApellido').value = u.apellido;
-            document.getElementById('editUserDni').value = u.dni;
-            document.getElementById('editUserCuil').value = u.cuil;
-            document.getElementById('editUserTelefono').value = u.telefono;
-            document.getElementById('editUserRol').value = u.role || 'Socio';
-            document.getElementById('modalEditUsuario').classList.remove('hidden');
-        }
-        function closeEditUsuarioModal() { document.getElementById('modalEditUsuario').classList.add('hidden'); }
-
-        function saveEditUsuario(e) {
-            e.preventDefault();
-            let i = document.getElementById('editUserIndex').value;
-            dbUsers[i].nombre = document.getElementById('editUserNombre').value;
-            dbUsers[i].apellido = document.getElementById('editUserApellido').value;
-            dbUsers[i].dni = document.getElementById('editUserDni').value;
-            dbUsers[i].cuil = document.getElementById('editUserCuil').value;
-            dbUsers[i].telefono = document.getElementById('editUserTelefono').value;
-            let nuevoRol = document.getElementById('editUserRol').value;
-            dbUsers[i].role = nuevoRol;
-
-            let u = dbUsers[i];
-            if (isFirebaseReady && u.idDoc) {
-                firebase.firestore().collection('usuarios').doc(u.idDoc).update({
-                    nombre: u.nombre,
-                    apellido: u.apellido,
-                    dni: u.dni,
-                    cuil: u.cuil,
-                    telefono: u.telefono,
-                    role: u.role
-                }).then(() => console.log("Usuario actualizado en Firestore"));
-            }
-
-            closeEditUsuarioModal();
-            renderAll();
-        }
-
         function aprobarUsuario(index) {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: Permiso restringido a consulta.");
-                return;
-            }
             dbUsers[index].role = 'Socio';
             let u = dbUsers[index];
             if (isFirebaseReady && u.idDoc) {
@@ -1737,20 +1696,14 @@
                     <td class="p-3 font-sans">${a.firmantes}</td>
                     <td class="p-3 text-center font-sans no-print">
                         <a href="${a.link}" target="_blank" class="px-2.5 py-1 bg-appRed text-white font-bold rounded text-[11px] inline-flex items-center gap-1">
-                            <i class="fa-solid fa-file-pdf"></i> Descargar / Ver PDF
+                            <i class="fa-solid fa-file-pdf"></i> Descargar / Ver
                         </a>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function openNuevaActaModal() {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: Modo auditoría sin permisos de creación.");
-                return;
-            }
-            document.getElementById('modalNuevaActa').classList.remove('hidden');
-        }
+        function openNuevaActaModal() { document.getElementById('modalNuevaActa').classList.remove('hidden'); }
         function closeNuevaActaModal() { document.getElementById('modalNuevaActa').classList.add('hidden'); }
 
         function saveNuevaActa(e) {
@@ -1767,13 +1720,7 @@
             renderAll();
         }
 
-        function openSaldoInicialModal() {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: Acción de modificación no autorizada.");
-                return;
-            }
-            document.getElementById('modalSaldoInicial').classList.remove('hidden');
-        }
+        function openSaldoInicialModal() { document.getElementById('modalSaldoInicial').classList.remove('hidden'); }
         function closeSaldoInicialModal() { document.getElementById('modalSaldoInicial').classList.add('hidden'); }
 
         function saveSaldoInicial(e) {
@@ -1794,13 +1741,7 @@
             document.getElementById('arqueoSaldoFinal').textContent = '$' + finalSaldo.toLocaleString('es-AR');
         }
 
-        function openMovimientoModal() {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: El Revisor de Cuentas solo puede consultar los asientos contables.");
-                return;
-            }
-            document.getElementById('modalMovimiento').classList.remove('hidden');
-        }
+        function openMovimientoModal() { document.getElementById('modalMovimiento').classList.remove('hidden'); }
         function closeMovimientoModal() { document.getElementById('modalMovimiento').classList.add('hidden'); }
 
         function saveMovimiento(e) {
@@ -1828,10 +1769,6 @@
         }
 
         function deleteMovimiento(id) {
-            if (currentUser && currentUser.role === 'Revisor de Cuentas') {
-                alert("ACCESO DENEGADO: El Revisor de Cuentas no posee permisos de borrado.");
-                return;
-            }
             if (confirm("¿Eliminar este registro contable?")) {
                 dbMovimientos = dbMovimientos.filter(m => m.id !== id);
                 renderAll();
