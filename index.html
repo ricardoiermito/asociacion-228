@@ -387,7 +387,7 @@
                                         <th class="p-3">Concepto / Detalle</th>
                                         <th class="p-3 text-right">Ingreso</th>
                                         <th class="p-3 text-right">Egreso</th>
-                                        <th class="p-3 text-center action-col no-print">Acción</th>
+                                        <th class="only-tesorero p-3 text-center action-col no-print">Acción</th>
                                     </tr>
                                 </thead>
                                 <tbody id="cajaTableBody" class="divide-y divide-slate-100">
@@ -1445,7 +1445,7 @@
                         <td class="p-3 font-bold text-slate-800 font-sans">${m.concepto}</td>
                         <td class="p-3 text-right font-bold text-green-600">${m.tipo === 'ingreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
                         <td class="p-3 text-right font-bold text-red-600">${m.tipo === 'egreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
-                        <td class="p-3 text-center action-col no-print">
+                        <td class="only-tesorero p-3 text-center action-col no-print">
                             <button onclick="deleteMovimiento(${m.id})" class="only-tesorero text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>
@@ -1793,6 +1793,10 @@
         }
 
         function deleteMovimiento(id) {
+            if (!currentUser || currentUser.role !== 'Tesorero') {
+                alert("ACCESO DENEGADO: La eliminación de registros contables es una atribución exclusiva del Tesorero.");
+                return;
+            }
             if (confirm("¿Eliminar este registro contable?")) {
                 dbMovimientos = dbMovimientos.filter(m => m.id !== id);
                 renderAll();
