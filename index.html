@@ -1587,7 +1587,7 @@
         // FUNCIONES DE EDICIÓN DE PERFIL, EMAIL Y ELIMINACIÓN DEFINITIVA
         function openEditUsuarioModal(index) {
             if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
-                alert("ACCESO DENEGADO: Tu rol (${currentUser ? currentUser.role : 'Invitado'}) no tiene permisos de modificación de usuarios ni asignación de roles (Función exclusiva de Tesorería/Presidencia).");
+                alert("ACCESO DENEGADO: Tu rol no tiene permisos de modificación de usuarios.");
                 return;
             }
             let u = dbUsers[index];
@@ -1598,7 +1598,26 @@
             document.getElementById('editUserCuil').value = u.cuil || '';
             document.getElementById('editUserEmail').value = u.email || '';
             document.getElementById('editUserTelefono').value = u.telefono || '';
-            document.getElementById('editUserRol').value = u.role || 'Socio';
+            
+            let rolSelect = document.getElementById('editUserRol');
+            if (currentUser.role === 'Secretario') {
+                rolSelect.innerHTML = `
+                    <option value="Socio">Socio</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Inactivo">Inactivo (Baja Lógica)</option>
+                `;
+            } else {
+                rolSelect.innerHTML = `
+                    <option value="Socio">Socio</option>
+                    <option value="Pendiente">Pendiente</option>
+                    <option value="Tesorero">Tesorero</option>
+                    <option value="Presidente">Presidente</option>
+                    <option value="Secretario">Secretario</option>
+                    <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                    <option value="Inactivo">Inactivo (Baja Lógica)</option>
+                `;
+            }
+            rolSelect.value = u.role || 'Socio';
             document.getElementById('modalEditUsuario').classList.remove('hidden');
         }
 
@@ -1677,6 +1696,21 @@
             if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: No tenés permisos para agregar usuarios manualmente.");
                 return;
+            }
+            let rolSelect = document.getElementById('manRol');
+            if (currentUser.role === 'Secretario') {
+                rolSelect.innerHTML = `
+                    <option value="Socio" selected>Socio</option>
+                    <option value="Pendiente">Pendiente</option>
+                `;
+            } else {
+                rolSelect.innerHTML = `
+                    <option value="Socio" selected>Socio</option>
+                    <option value="Presidente">Presidente</option>
+                    <option value="Tesorero">Tesorero</option>
+                    <option value="Secretario">Secretario</option>
+                    <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                `;
             }
             document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); 
         }
