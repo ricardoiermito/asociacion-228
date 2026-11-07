@@ -208,7 +208,10 @@
         <div class="flex-1 flex flex-col md:flex-row min-h-0">
             <!-- SIDEBAR NAVIGATION -->
             <nav class="w-full md:w-64 bg-slate-800 text-slate-200 p-2 flex flex-row md:flex-col gap-1 border-r border-slate-700 font-medium text-xs overflow-x-auto no-print">
-                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                <button onclick="switchTab('miperfil')" id="nav-miperfil" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-id-card w-4 text-appGreen"></i> Mi Estado y Cuotas
+                </button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
                     <i class="fa-solid fa-chart-pie w-4 text-appYellow"></i> Dashboard General
                 </button>
                 <button onclick="switchTab('caja')" id="nav-caja" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
@@ -232,6 +235,59 @@
             <main class="flex-1 p-4 md:p-6 bg-slate-100 overflow-y-auto min-w-0">
 
                 <!-- TAB 1: DASHBOARD -->
+                
+                <!-- TAB 0: MI ESTADO DE SOCIO Y CUOTAS (EXCLUSIVO SOCIOS Y CONSULTA PROPIA) -->
+                <div id="tab-miperfil" class="tab-pane hidden space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-user-check text-appGreen mr-2"></i>Estado de Socio</h2>
+                                <p class="text-xs text-slate-500">Información personal e historial de cuotas sociales</p>
+                            </div>
+                            <span id="miEstadoBadge" class="px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full uppercase">Socio Activo</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                                <p class="text-slate-500 uppercase font-sans font-bold text-[11px]">Datos del Titular:</p>
+                                <p class="text-slate-800 font-bold text-sm" id="miPerfilNombre">---</p>
+                                <p class="text-slate-600">DNI: <span id="miPerfilDni" class="font-bold">---</span></p>
+                                <p class="text-slate-600">CUIL: <span id="miPerfilCuil" class="font-bold">---</span></p>
+                                <p class="text-slate-600">Email: <span id="miPerfilEmail" class="font-bold">---</span></p>
+                                <p class="text-slate-600">Teléfono: <span id="miPerfilTelefono" class="font-bold">---</span></p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 font-sans">
+                                <p class="text-slate-500 uppercase font-bold text-[11px]">Resumen de Cuotas Social ($1.000 / mes):</p>
+                                <div class="flex justify-between items-center bg-white p-3 rounded border border-slate-200">
+                                    <span class="text-slate-600 font-medium text-xs">Año En Curso (2026):</span>
+                                    <span id="miPerfilCuotasResumen" class="font-bold text-green-600 font-mono text-xs">AL DÍA</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-2">Para regularizar cuotas o presentar comprobantes de pago, comunicate con Tesorería.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TABLA DETALLE DE CUOTAS REGISTRADAS -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden space-y-3 p-4">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase"><i class="fa-solid fa-receipt text-appBlue mr-1"></i> Historial de Cuotas Abonadas</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead class="bg-slate-900 text-white uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">Fecha de Pago</th>
+                                        <th class="p-3">Concepto / Período</th>
+                                        <th class="p-3">Monto Abonado</th>
+                                        <th class="p-3">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="miCuotasTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="tab-dashboard" class="tab-pane space-y-6">
                     <div class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
                         <div>
@@ -962,14 +1018,35 @@
         }
 
         function switchTab(tabKey) {
+            if (!currentUser) return;
+            let rol = currentUser.role || 'Socio';
+
+            // Bloqueo estricto para Socios y Pendientes: Solo pueden ver 'miperfil'
+            if ((rol === 'Socio' || rol === 'Pendiente') && tabKey !== 'miperfil') {
+                alert("ACCESO RESTRINGIDO: Los socios solo tienen permiso para ver su estado de socio e historial de cuotas.");
+                tabKey = 'miperfil';
+            }
+
+            // Bloqueo de Gestión de Usuarios para roles no administrativos
+            if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Presidente')) {
+                alert("ACCESO RESTRINGIDO: Solo la Comisión Directiva autorizada puede acceder a la gestión de usuarios.");
+                tabKey = (rol === 'Socio' || rol === 'Pendiente') ? 'miperfil' : 'dashboard';
+            }
+
             document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active', 'bg-slate-700', 'text-white'));
-            document.getElementById(`tab-${tabKey}`).classList.remove('hidden');
-            document.getElementById(`nav-${tabKey}`).classList.add('active', 'bg-slate-700', 'text-white');
+            
+            const targetPane = document.getElementById(`tab-${tabKey}`);
+            const targetNav = document.getElementById(`nav-${tabKey}`);
+            
+            if (targetPane) targetPane.classList.remove('hidden');
+            if (targetNav) targetNav.classList.add('active', 'bg-slate-700', 'text-white');
         }
 
         // RENDERIZADOS GENERALES
         function renderAll() {
+            aplicarPermisosPorRol();
+            renderMiPerfilSocio();
             renderEntidad();
             renderCaja();
             renderSocios();
@@ -977,6 +1054,88 @@
             renderActas();
             renderArqueo();
             renderFirmas();
+        }
+
+        function aplicarPermisosPorRol() {
+            if (!currentUser) return;
+            const rol = currentUser.role || 'Socio';
+
+            const navDashboard = document.getElementById('nav-dashboard');
+            const navCaja = document.getElementById('nav-caja');
+            const navCuotas = document.getElementById('nav-cuotas');
+            const navSecretaria = document.getElementById('nav-secretaria');
+            const navUsuarios = document.getElementById('nav-usuarios');
+            const navArqueo = document.getElementById('nav-arqueo');
+            const navMiPerfil = document.getElementById('nav-miperfil');
+
+            if (rol === 'Socio' || rol === 'Pendiente') {
+                if (navDashboard) navDashboard.classList.add('hidden');
+                if (navCaja) navCaja.classList.add('hidden');
+                if (navCuotas) navCuotas.classList.add('hidden');
+                if (navSecretaria) navSecretaria.classList.add('hidden');
+                if (navUsuarios) navUsuarios.classList.add('hidden');
+                if (navArqueo) navArqueo.classList.add('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                // Ocultar acciones contables de edición global
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                switchTab('miperfil');
+            } else if (rol === 'Presidente' || rol === 'Revisor de Cuentas' || rol === 'Vocal') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.add('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+            } else if (rol === 'Tesorero') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
+            }
+        }
+
+        function renderMiPerfilSocio() {
+            if (!currentUser) return;
+            const miNombre = currentUser.nombre ? `${currentUser.nombre} ${currentUser.apellido}` : currentUser.name || currentUser.email;
+            
+            document.getElementById('miPerfilNombre').textContent = miNombre;
+            document.getElementById('miPerfilDni').textContent = currentUser.dni || 'S/D';
+            document.getElementById('miPerfilCuil').textContent = currentUser.cuil || 'S/D';
+            document.getElementById('miPerfilEmail').textContent = currentUser.email || 'S/D';
+            document.getElementById('miPerfilTelefono').textContent = currentUser.telefono || 'S/D';
+            document.getElementById('miEstadoBadge').textContent = (currentUser.role || 'Socio').toUpperCase();
+
+            // Filtrar únicamente los movimientos de cobro de cuota pertenecientes a este socio
+            const misPagos = dbMovimientos.filter(m => m.categoria === 'Cuota Social' && m.concepto.toLowerCase().includes(miNombre.toLowerCase()));
+            
+            const tableBody = document.getElementById('miCuotasTableBody');
+            if (misPagos.length > 0) {
+                tableBody.innerHTML = misPagos.map(p => `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-slate-600">${p.fecha}</td>
+                        <td class="p-3 font-bold font-sans text-slate-800">${p.concepto}</td>
+                        <td class="p-3 font-bold text-green-600">$${p.monto.toLocaleString('es-AR')}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded">PAGADO</span></td>
+                    </tr>
+                `).join('');
+            } else {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="p-4 text-center text-slate-500 font-sans">
+                            No se registran pagos de cuotas para este usuario en el período actual.
+                        </td>
+                    </tr>
+                `;
+            }
         }
 
         function renderFirmas() {
