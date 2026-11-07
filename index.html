@@ -826,6 +826,7 @@
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('displayUsername').textContent = email;
             document.getElementById('displayRoleBadge').textContent = currentUser.role;
+            cargarDatosDesdeFirestore();
             renderAll();
         }
 
@@ -838,9 +839,51 @@
                     document.getElementById('appScreen').classList.remove('hidden');
                     document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
                     document.getElementById('displayRoleBadge').textContent = currentUser.role;
+                    cargarDatosDesdeFirestore();
                     renderAll();
                 } else {
                     setAdminSession(email);
+                }
+            });
+        }
+
+        // SINCRONIZACIÓN EN TIEMPO REAL CON FIRESTORE
+        function cargarDatosDesdeFirestore() {
+            if (!isFirebaseReady) return;
+
+            // Escuchar cambios en Usuarios
+            firebase.firestore().collection('usuarios').onSnapshot(snapshot => {
+                let tempUsers = [];
+                snapshot.forEach(doc => {
+                    tempUsers.push({ idDoc: doc.id, ...doc.data() });
+                });
+                if (tempUsers.length > 0) {
+                    dbUsers = tempUsers;
+                    renderAll();
+                }
+            });
+
+            // Escuchar cambios en Movimientos
+            firebase.firestore().collection('movimientos').onSnapshot(snapshot => {
+                let tempMovs = [];
+                snapshot.forEach(doc => {
+                    tempMovs.push(doc.data());
+                });
+                if (tempMovs.length > 0) {
+                    dbMovimientos = tempMovs;
+                    renderAll();
+                }
+            });
+
+            // Escuchar cambios en Actas
+            firebase.firestore().collection('actas').onSnapshot(snapshot => {
+                let tempActas = [];
+                snapshot.forEach(doc => {
+                    tempActas.push(doc.data());
+                });
+                if (tempActas.length > 0) {
+                    dbActas = tempActas;
+                    renderAll();
                 }
             });
         }
@@ -1050,11 +1093,21 @@
 
         function cambiarRolUsuario(index, nuevoRol) {
             dbUsers[index].role = nuevoRol;
+            let u = dbUsers[index];
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: nuevoRol })
+                    .then(() => console.log("Rol actualizado en Firestore"));
+            }
             renderAll();
         }
 
         function darDeBajaUsuario(index) {
             if (confirm(`¿Seguro deseas dar de baja a ${dbUsers[index].nombre}?`)) {
+                let u = dbUsers[index];
+                if (isFirebaseReady && u.idDoc) {
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).delete()
+                        .then(() => console.log("Eliminado de Firestore"));
+                }
                 dbUsers.splice(index, 1);
                 renderAll();
             }
@@ -1086,17 +1139,29 @@
 
         function saveUsuarioManual(e) {
             e.preventDefault();
-            dbUsers.push({
+            const nuevoUsr = {
                 nombre: document.getElementById('manNombre').value,
                 apellido: document.getElementById('manApellido').value,
                 dni: document.getElementById('manDni').value,
                 cuil: document.getElementById('manCuil').value,
                 email: document.getElementById('manEmail').value,
                 telefono: document.getElementById('manTelefono').value,
-                role: document.getElementById('manRol').value
-            });
-            closeCrearUsuarioManualModal();
-            renderAll();
+                role: document.getElementById('manRol').value,
+                fechaRegistro: new Date().toISOString().split('T')[0]
+            };
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('usuarios').add(nuevoUsr)
+                    .then(() => {
+                        closeCrearUsuarioManualModal();
+                        alert("Usuario agregado con éxito a la base de datos.");
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            } else {
+                dbUsers.push(nuevoUsr);
+                closeCrearUsuarioManualModal();
+                renderAll();
+            }
         }
 
         // EDITAR USUARIO PERFIL
@@ -1187,16 +1252,26 @@
 
         function saveMovimiento(e) {
             e.preventDefault();
-            dbMovimientos.unshift({
+            const nuevoMov = {
                 id: Date.now(),
                 fecha: new Date().toISOString().split('T')[0],
                 tipo: document.getElementById('movTipo').value,
                 categoria: document.getElementById('movCategoria').value,
                 concepto: document.getElementById('movConcepto').value,
                 monto: parseFloat(document.getElementById('movMonto').value)
-            });
-            closeMovimientoModal();
-            renderAll();
+            };
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('movimientos').add(nuevoMov)
+                    .then(() => {
+                        closeMovimientoModal();
+                    })
+                    .catch(err => alert("Error al guardar en Firebase: " + err.message));
+            } else {
+                dbMovimientos.unshift(nuevoMov);
+                closeMovimientoModal();
+                renderAll();
+            }
         }
 
         function deleteMovimiento(id) {
