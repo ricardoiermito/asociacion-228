@@ -529,9 +529,29 @@
                                 <h2 class="text-base font-bold text-slate-900">Arqueo de Caja y Balances Oficiales</h2>
                                 <p class="text-xs text-slate-500">Generación de informes contables normalizados para Asamblea y ARCA</p>
                             </div>
-                            <button onclick="window.print()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors no-print">
-                                <i class="fa-solid fa-file-pdf"></i> Generar / Imprimir Informe PDF
-                            </button>
+                            <div class="flex items-center gap-2 no-print">
+                                <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-200 text-xs">
+                                    <label class="font-bold text-slate-700">Mes:</label>
+                                    <select id="selectMesArqueo" onchange="renderArqueo()" class="bg-white border border-slate-300 rounded p-1 font-bold">
+                                        <option value="todos">Año Completo (2026)</option>
+                                        <option value="0">Enero</option>
+                                        <option value="1">Febrero</option>
+                                        <option value="2">Marzo</option>
+                                        <option value="3">Abril</option>
+                                        <option value="4">Mayo</option>
+                                        <option value="5">Junio</option>
+                                        <option value="6">Julio</option>
+                                        <option value="7">Agosto</option>
+                                        <option value="8">Septiembre</option>
+                                        <option value="9">Octubre</option>
+                                        <option value="10">Noviembre</option>
+                                        <option value="11">Diciembre</option>
+                                    </select>
+                                </div>
+                                <button onclick="window.print()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                                    <i class="fa-solid fa-file-pdf"></i> Imprimir PDF Mensual
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
@@ -1844,14 +1864,36 @@
         }
 
         function renderArqueo() {
-            let ingresos = dbMovimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
-            let egresos = dbMovimientos.filter(m => m.tipo === 'egreso').reduce((a, b) => a + b.monto, 0);
+            let mesSelect = document.getElementById('selectMesArqueo');
+            let mesVal = mesSelect ? mesSelect.value : 'todos';
+
+            let movsFiltrados = dbMovimientos;
+            if (mesVal !== 'todos') {
+                let mIdx = parseInt(mesVal);
+                movsFiltrados = dbMovimientos.filter(m => {
+                    if (!m.fecha) return false;
+                    let partes = m.fecha.split('-'); // YYYY-MM-DD
+                    if (partes.length < 2) return false;
+                    let mNum = parseInt(partes[1]) - 1;
+                    return mNum === mIdx;
+                });
+            }
+
+            let ingresos = movsFiltrados.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            let egresos = movsFiltrados.filter(m => m.tipo === 'egreso').reduce((a, b) => a + b.monto, 0);
             let neto = ingresos - egresos;
             let finalSaldo = saldoInicialGlobal + neto;
 
             document.getElementById('arqueoSaldoInicial').textContent = '$' + saldoInicialGlobal.toLocaleString('es-AR');
             document.getElementById('arqueoFlujoNeto').textContent = '$' + neto.toLocaleString('es-AR');
             document.getElementById('arqueoSaldoFinal').textContent = '$' + finalSaldo.toLocaleString('es-AR');
+
+            // Actualizar título de impresión si existe
+            let printTitle = document.getElementById('printTitle');
+            if (printTitle) {
+                let nombreMes = mesVal === 'todos' ? 'EJERCICIO COMPLETO 2026' : `MES DE ${MESES_ANIO[parseInt(mesVal)].toUpperCase()} 2026`;
+                printTitle.textContent = `INFORME CONTABLE OFICIAL - ${nombreMes}`;
+            }
         }
 
         function openMovimientoModal() { document.getElementById('modalMovimiento').classList.remove('hidden'); }
@@ -1886,9 +1928,18 @@
                 alert("ACCESO DENEGADO: La eliminación de registros contables es una atribución exclusiva del Tesorero.");
                 return;
             }
-            if (confirm("¿Eliminar este registro contable?")) {
+            if (confirm("¿Estás seguro de eliminar este registro contable? Se borrará de la base de datos de Tesorería.")) {
+                if (isFirebaseReady) {
+                    firebase.firestore().collection('movimientos').where('id', '==', id).get()
+                        .then(snapshot => {
+                            snapshot.forEach(doc => {
+                                doc.ref.delete();
+                            });
+                        }).catch(err => console.log("Error al borrar en Firebase:", err));
+                }
                 dbMovimientos = dbMovimientos.filter(m => m.id !== id);
                 renderAll();
+                alert("Asiento eliminado correctamente.");
             }
         }
     </script>
