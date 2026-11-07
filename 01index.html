@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contable - Asociación Civil Padres y Amigos 228</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (v9 Compat para HTML estático simple) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace']
+                    },
+                    colors: {
+                        appBlue: '#1d4ed8',
+                        appYellow: '#eab308',
+                        appRed: '#dc2626',
+                        appGreen: '#16a34a',
+                        appOrange: '#f97316',
+                        appViolet: '#c084fc',
+                        appVioletDark: '#7e22ce'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white !important; color: black !important; }
+            main { padding: 0 !important; }
+            .shadow-sm, .shadow-md, .shadow-2xl { box-shadow: none !important; }
+            .border { border-color: #cbd5e1 !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- LOGIN / REGISTRO / RECUPERAR CONTRASEÑA -->
+    <div id="authContainer" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4 overflow-y-auto no-print">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-300 my-8">
+            <div class="bg-appBlue p-6 text-white text-center border-b border-blue-800">
+                <div class="w-12 h-12 bg-appYellow text-slate-900 rounded-lg flex items-center justify-center font-bold text-xl mx-auto mb-3 shadow-lg">
+                    228
+                </div>
+                <h1 class="text-lg font-bold">Asociación Civil Padres y Amigos 228</h1>
+                <p class="text-xs text-blue-100 mt-1">Gestión Contable, Secretaría y Tesorería</p>
+            </div>
+
+            <!-- FORMULARIO 1: INGRESO (LOGIN) -->
+            <form id="formLogin" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                <div id="loginError" class="hidden p-3 bg-red-100 border border-red-300 text-red-700 text-xs rounded-lg font-medium text-center"></div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-envelope text-xs"></i></span>
+                        <input type="email" id="loginEmail" class="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-appBlue font-mono" placeholder="ejemplo@correo.com" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Contraseña</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock text-xs"></i></span>
+                        <input type="password" id="loginPassword" class="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-appBlue font-mono" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" onclick="showAuthScreen('forgot')" class="text-xs text-appBlue font-bold hover:underline">¿Olvidaste tu contraseña?</button>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors uppercase tracking-wider">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Ingresar al Sistema
+                </button>
+
+                <div class="pt-4 border-t border-slate-200 text-center">
+                    <p class="text-xs text-slate-600">¿No tenés una cuenta?</p>
+                    <button type="button" onclick="showAuthScreen('register')" class="mt-1 font-bold text-xs text-appGreen hover:underline">Solicitar Registro de Socio</button>
+                </div>
+            </form>
+
+            <!-- FORMULARIO 2: REGISTRO DE NUEVO USUARIO -->
+            <form id="formRegister" onsubmit="handleRegister(event)" class="p-6 space-y-3 hidden">
+                <h3 class="text-sm font-bold text-slate-800 uppercase border-b border-slate-200 pb-2">Registro de Solicitante</h3>
+                <div id="registerError" class="hidden p-3 bg-red-100 border border-red-300 text-red-700 text-xs rounded-lg font-medium"></div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nombre</label>
+                        <input type="text" id="regNombre" class="w-full p-2 border border-slate-300 rounded-lg text-xs" placeholder="Juan" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Apellido</label>
+                        <input type="text" id="regApellido" class="w-full p-2 border border-slate-300 rounded-lg text-xs" placeholder="Pérez" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">DNI</label>
+                        <input type="text" id="regDni" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="30.123.456" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CUIL</label>
+                        <input type="text" id="regCuil" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="20-30123456-9" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Dirección</label>
+                    <input type="text" id="regDireccion" class="w-full p-2 border border-slate-300 rounded-lg text-xs" placeholder="Calle Falsa 123, General Roca" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Teléfono</label>
+                    <input type="text" id="regTelefono" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="2984-123456" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                    <input type="email" id="regEmail" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="socio@correo.com" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="regPassword" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors uppercase tracking-wider mt-2">
+                    Enviar Solicitud de Registro
+                </button>
+
+                <div class="pt-3 border-t border-slate-200 text-center">
+                    <button type="button" onclick="showAuthScreen('login')" class="text-xs font-bold text-slate-600 hover:underline">&larr; Volver a Ingresar</button>
+                </div>
+            </form>
+
+            <!-- FORMULARIO 3: RECUPERAR CONTRASEÑA -->
+            <form id="formForgot" onsubmit="handleForgotPassword(event)" class="p-6 space-y-4 hidden">
+                <h3 class="text-sm font-bold text-slate-800 uppercase border-b border-slate-200 pb-2">Recuperar Contraseña</h3>
+                <p class="text-xs text-slate-600">Ingresá tu correo electrónico registrado y te enviaremos un enlace de restablecimiento.</p>
+
+                <div id="forgotMsg" class="hidden p-3 bg-blue-100 border border-blue-300 text-blue-800 text-xs rounded-lg font-medium"></div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                    <input type="email" id="forgotEmail" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="tu_mail@correo.com" required>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors uppercase tracking-wider">
+                    Enviar Link de Recuperación
+                </button>
+
+                <div class="pt-3 border-t border-slate-200 text-center">
+                    <button type="button" onclick="showAuthScreen('login')" class="text-xs font-bold text-slate-600 hover:underline">&larr; Volver al Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="appScreen" class="flex-1 flex flex-col hidden">
+        <!-- TOP NAVBAR -->
+        <header class="bg-slate-900 text-white border-b border-slate-700 px-4 py-2.5 flex items-center justify-between text-xs no-print">
+            <div class="flex items-center gap-3">
+                <span class="font-bold bg-appYellow text-slate-900 px-2.5 py-1 rounded text-[11px] shadow">SOCIEDAD 228</span>
+                <span class="hidden sm:inline text-slate-300 border-l border-slate-700 pl-3">Asociación Civil Padres y Amigos 228</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded border border-slate-700">
+                    <i class="fa-solid fa-circle-user text-appGreen"></i>
+                    <div>
+                        <span id="displayUsername" class="font-bold text-white uppercase">---</span>
+                        <span id="displayRoleBadge" class="ml-1 text-[10px] px-1.5 py-0.5 bg-slate-700 rounded text-appYellow font-bold">---</span>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="bg-appRed hover:bg-red-700 px-2.5 py-1 rounded text-white font-bold transition-colors">
+                    <i class="fa-solid fa-power-off mr-1"></i> Salir
+                </button>
+            </div>
+        </header>
+
+        <!-- HEADER DE IMPRESIÓN (SOLO PDF/IMPRESORA) -->
+        <div class="hidden print-only p-4 border-b border-slate-400 mb-4">
+            <h1 class="text-xl font-bold text-center uppercase">Asociación Civil Padres y Amigos 228</h1>
+            <p class="text-center text-xs text-slate-600">General Roca, Río Negro - CUIT: 30-71234567-9</p>
+            <p id="printTitle" class="text-center font-bold text-sm mt-2 uppercase border-t border-b border-slate-300 py-1">INFORME CONTABLE OFICIAL</p>
+        </div>
+
+        <!-- BODY WRAPPER -->
+        <div class="flex-1 flex flex-col md:flex-row min-h-0">
+            <!-- SIDEBAR NAVIGATION -->
+            <nav class="w-full md:w-64 bg-slate-800 text-slate-200 p-2 flex flex-row md:flex-col gap-1 border-r border-slate-700 font-medium text-xs overflow-x-auto no-print">
+                <button onclick="switchTab('miperfil')" id="nav-miperfil" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-id-card w-4 text-appGreen"></i> Mi Estado y Cuotas
+                </button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-chart-pie w-4 text-appYellow"></i> Dashboard General
+                </button>
+                <button onclick="switchTab('caja')" id="nav-caja" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-book w-4 text-appOrange"></i> Libro de Caja
+                </button>
+                <button onclick="switchTab('cuotas')" id="nav-cuotas" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-users w-4 text-appGreen"></i> Padrón y Cuotas
+                </button>
+                <button onclick="switchTab('secretaria')" id="nav-secretaria" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-folder-open w-4 text-appViolet"></i> Secretaría y Actas
+                </button>
+                <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn hidden-socio flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-user-shield w-4 text-appRed"></i> Gestión de Usuarios
+                </button>
+                <button onclick="switchTab('arqueo')" id="nav-arqueo" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-file-signature w-4 text-appBlue"></i> Arqueo e Información PDF
+                </button>
+            </nav>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="flex-1 p-4 md:p-6 bg-slate-100 overflow-y-auto min-w-0">
+
+                <!-- TAB 0: MI ESTADO DE SOCIO Y CUOTAS -->
+                <div id="tab-miperfil" class="tab-pane hidden space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-900"><i class="fa-solid fa-user-check text-appGreen mr-2"></i>Estado de Socio</h2>
+                                <p class="text-xs text-slate-500">Información personal e historial de cuotas sociales</p>
+                            </div>
+                            <span id="miEstadoBadge" class="px-3 py-1 bg-green-100 text-green-800 font-bold text-xs rounded-full uppercase">Socio Activo</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2">
+                                <p class="text-slate-500 uppercase font-sans font-bold text-[11px]">Datos del Titular:</p>
+                                <p class="text-slate-800 font-bold text-sm" id="miPerfilNombre">---</p>
+                                <p class="text-slate-600">DNI: <span id="miPerfilDni" class="font-bold">---</span></p>
+                                <p class="text-slate-600">CUIL: <span id="miPerfilCuil" class="font-bold">---</span></p>
+                                <p class="text-slate-600">Email: <span id="miPerfilEmail" class="font-bold">---</span></p>
+                                <p class="text-slate-600">Teléfono: <span id="miPerfilTelefono" class="font-bold">---</span></p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-2 font-sans">
+                                <p class="text-slate-500 uppercase font-bold text-[11px]">Resumen de Cuotas Social ($1.000 / mes):</p>
+                                <div class="flex justify-between items-center bg-white p-3 rounded border border-slate-200">
+                                    <span class="text-slate-600 font-medium text-xs">Año En Curso (2026):</span>
+                                    <span id="miPerfilCuotasResumen" class="font-bold text-green-600 font-mono text-xs">AL DÍA</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 mt-2">Para regularizar cuotas o presentar comprobantes de pago, comunicate con Tesorería.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden space-y-3 p-4">
+                        <h3 class="font-bold text-slate-800 text-xs uppercase"><i class="fa-solid fa-receipt text-appBlue mr-1"></i> Historial de Cuotas Abonadas</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead class="bg-slate-900 text-white uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">Período / Mes</th>
+                                        <th class="p-3">Concepto Registrado</th>
+                                        <th class="p-3">Monto Abonado</th>
+                                        <th class="p-3">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="miCuotasTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dinámico -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 1: DASHBOARD -->
+                <div id="tab-dashboard" class="tab-pane space-y-6">
+                    <div class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Estado Financiero y Operativo</h2>
+                            <p class="text-xs text-slate-500">Base de datos en la nube (Firebase Firestore)</p>
+                        </div>
+                        <button onclick="openMovimientoModal()" class="only-tesorero px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors no-print">
+                            <i class="fa-solid fa-plus"></i> Registrar Movimiento
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appBlue">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Saldo Actual en Caja</p>
+                            <p id="dashSaldo" class="text-2xl font-bold font-mono text-slate-900 mt-1">$0,00</p>
+                            <span class="text-[11px] text-appBlue font-semibold"><i class="fa-solid fa-vault mr-1"></i> Incluye Saldo Anterior</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appGreen">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Total Ingresos</p>
+                            <p id="dashIngresos" class="text-2xl font-bold font-mono text-appGreen mt-1">$0,00</p>
+                            <span class="text-[11px] text-slate-500">Cuotas + Varios</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appRed">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Total Egresos</p>
+                            <p id="dashEgresos" class="text-2xl font-bold font-mono text-appRed mt-1">$0,00</p>
+                            <span class="text-[11px] text-slate-500">Fijos, Variables y Varios</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appYellow">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Socios al Día / Total</p>
+                            <p id="dashSociosCount" class="text-2xl font-bold font-mono text-slate-900 mt-1">0 / 0</p>
+                            <span class="text-[11px] text-slate-500">Padrón Completo</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-3.5 bg-slate-50 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+                            <span><i class="fa-solid fa-list-check mr-1.5 text-appOrange"></i> ÚLTIMOS MOVIMIENTOS CONTABLES</span>
+                            <button onclick="switchTab('caja')" class="text-appBlue hover:underline text-[11px] no-print">Ver Libro Completo &rarr;</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">Fecha</th>
+                                        <th class="p-3">Categoría</th>
+                                        <th class="p-3">Concepto / Detalle</th>
+                                        <th class="p-3">Tipo</th>
+                                        <th class="p-3 text-right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashRecentTable" class="divide-y divide-slate-100">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: LIBRO DE CAJA -->
+                <div id="tab-caja" class="tab-pane hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-3 justify-between items-center">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Libro de Caja y Tesorería</h2>
+                            <p class="text-xs text-slate-500">Registro detallado de ingresos y egresos</p>
+                        </div>
+                        <div class="flex items-center gap-2 no-print">
+                            <button onclick="openSaldoInicialModal()" class="only-tesorero px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-lg shadow transition-colors">
+                                <i class="fa-solid fa-coins mr-1 text-appYellow"></i> Saldo Inicial
+                            </button>
+                            <button onclick="openMovimientoModal()" class="only-tesorero px-3.5 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                                <i class="fa-solid fa-plus"></i> Nuevo Asiento
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-3 text-xs no-print">
+                        <span class="font-bold text-slate-700 uppercase"><i class="fa-solid fa-filter text-appOrange mr-1"></i> Filtrar por fechas:</span>
+                        <div class="flex items-center gap-1">
+                            <label class="text-slate-500">Desde:</label>
+                            <input type="date" id="filterFechaDesde" onchange="renderCaja()" class="border border-slate-300 rounded p-1 text-xs">
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <label class="text-slate-500">Hasta:</label>
+                            <input type="date" id="filterFechaHasta" onchange="renderCaja()" class="border border-slate-300 rounded p-1 text-xs">
+                        </div>
+                        <button onclick="limpiarFiltrosFecha()" class="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded font-bold">
+                            Limpiar Filtros
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead class="bg-slate-900 text-white uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">N°</th>
+                                        <th class="p-3">Fecha</th>
+                                        <th class="p-3">Categoría</th>
+                                        <th class="p-3">Concepto / Detalle</th>
+                                        <th class="p-3 text-right">Ingreso</th>
+                                        <th class="p-3 text-right">Egreso</th>
+                                        <th class="p-3 text-center action-col no-print">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cajaTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PADRÓN Y CUOTAS (INCLUYE COMISIÓN DIRECTIVA Y SOCIOS) -->
+                <div id="tab-cuotas" class="tab-pane hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Gestión de Socios y Cobro de Cuotas</h2>
+                            <p class="text-xs text-slate-500">Valor de Cuota Vigente: <span id="displayValorCuota" class="font-bold text-slate-900">$1.000,00</span> / mes (Toda la Comisión Directiva abona cuota)</p>
+                        </div>
+                        <button onclick="openModificarCuotaModal()" class="only-tesorero px-3 py-2 bg-appYellow text-slate-900 font-bold text-xs rounded-lg shadow flex items-center gap-2 hover:bg-yellow-500 transition-colors no-print">
+                            <i class="fa-solid fa-pen-to-square"></i> Modificar Valor de Cuota
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-900 text-white uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">DNI / CUIL</th>
+                                        <th class="p-3">Nombre y Apellido</th>
+                                        <th class="p-3">Rol Institucional</th>
+                                        <th class="p-3">Estado Cuota (12 Meses)</th>
+                                        <th class="p-3 text-center no-print">Acción Cobro</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sociosTableBody" class="divide-y divide-slate-100 font-mono">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: SECRETARÍA Y ACTAS -->
+                <div id="tab-secretaria" class="tab-pane hidden space-y-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-id-card text-appVioletDark mr-2"></i>Datos Institucionales de la Entidad</h2>
+                                <p class="text-xs text-slate-500">Modificación directa autorizada únicamente para el Tesorero</p>
+                            </div>
+                            <button onclick="openEditEntidadModal()" class="only-tesorero px-3 py-1.5 bg-appVioletDark hover:bg-purple-900 text-white rounded-lg text-xs font-bold no-print">
+                                <i class="fa-solid fa-pen-to-square mr-1"></i> Modificar Datos
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                            <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5">
+                                <p class="text-slate-500 uppercase font-sans font-bold">Institución:</p>
+                                <p id="instNombre" class="font-bold text-slate-900 text-sm">Asociación Civil Padres y Amigos 228</p>
+                                <p class="text-slate-600">CUIT: <span id="instCuit">30-71234567-9</span></p>
+                                <p class="text-slate-600">Domicilio: <span id="instDireccion">General Roca, Río Negro</span></p>
+                            </div>
+                            <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5 font-sans">
+                                <p class="text-slate-500 uppercase font-bold">Comisión Directiva:</p>
+                                <p>Presidente: <span id="cdPresidente" class="font-bold text-slate-800">Ana Gómez</span></p>
+                                <p>Tesorero: <span id="cdTesorero" class="font-bold text-slate-800">Ricardo Iermito</span></p>
+                                <p>Revisor de Cuentas: <span id="cdRevisor" class="font-bold text-slate-800">Auditor Interno</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-file-pdf text-appRed mr-2"></i>Libro Digital de Actas Oficiales</h2>
+                                <p class="text-xs text-slate-500">Registro, subida y descarga de Actas de Comisión Directiva y Asambleas</p>
+                            </div>
+                            <button onclick="openNuevaActaModal()" class="only-tesorero px-3.5 py-2 bg-appRed hover:bg-red-700 text-white rounded-lg text-xs font-bold no-print">
+                                <i class="fa-solid fa-file-circle-plus mr-1"></i> Registrar Nueva Acta
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-sans">
+                                <thead class="bg-slate-100 text-slate-700 uppercase font-bold">
+                                    <tr>
+                                        <th class="p-3">N° Acta</th>
+                                        <th class="p-3">Fecha</th>
+                                        <th class="p-3">Título / Temática</th>
+                                        <th class="p-3">Firmantes</th>
+                                        <th class="p-3 text-center no-print">Documento PDF</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="actasTableBody" class="divide-y divide-slate-100 font-mono">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: GESTIÓN DE USUARIOS -->
+                <div id="tab-usuarios" class="tab-pane hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-user-gear text-appRed mr-2"></i>Gestión Integral de Usuarios y Padrón</h2>
+                            <p class="text-xs text-slate-500">Alta manual, modificación de datos de perfil, email y asignación de roles</p>
+                        </div>
+                        <button onclick="openCrearUsuarioManualModal()" class="only-tesorero px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow transition-colors no-print">
+                            <i class="fa-solid fa-user-plus mr-1"></i> Agregar Usuario Manualmente
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-sans">
+                                <thead class="bg-slate-900 text-white uppercase">
+                                    <tr>
+                                        <th class="p-3">Usuario / Mail</th>
+                                        <th class="p-3">DNI / CUIL</th>
+                                        <th class="p-3">Contacto / Dirección</th>
+                                        <th class="p-3">Rol / Estado</th>
+                                        <th class="p-3 text-center no-print">Acciones y Gestión</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usuariosAdminTable" class="divide-y divide-slate-100">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: ARQUEO E INFORMES PDF -->
+                <div id="tab-arqueo" class="tab-pane hidden space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                        <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-4 gap-3">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900">Arqueo de Caja y Balances Oficiales</h2>
+                                <p class="text-xs text-slate-500">Generación de informes contables normalizados para Asamblea y ARCA</p>
+                            </div>
+                            <button onclick="window.print()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors no-print">
+                                <i class="fa-solid fa-file-pdf"></i> Generar / Imprimir Informe PDF
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <span class="text-slate-500 uppercase font-sans font-bold">Saldo Inicial Arrastrado:</span>
+                                <p id="arqueoSaldoInicial" class="text-xl font-bold text-slate-800 mt-1">$0,00</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <span class="text-slate-500 uppercase font-sans font-bold">Superávit / Defícit Período:</span>
+                                <p id="arqueoFlujoNeto" class="text-xl font-bold text-slate-800 mt-1">$0,00</p>
+                            </div>
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <span class="text-slate-500 uppercase font-sans font-bold">Saldo Final en Arqueo:</span>
+                                <p id="arqueoSaldoFinal" class="text-xl font-bold text-appGreen mt-1">$0,00</p>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-200 pt-4">
+                            <h3 class="font-bold text-slate-800 text-xs uppercase mb-3"><i class="fa-solid fa-file-signature text-appBlue mr-1"></i> Libro de Firmas y Conformidad de Comisión Directiva</h3>
+                            <p class="text-xs text-slate-500 mb-4">Cada miembro autorizado puede emitir su firma digital de conformidad para el presente balance y arqueo (Excluye socios generales).</p>
+                            
+                            <div id="firmasConformidadContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                                <!-- Dinámico -->
+                            </div>
+
+                            <div id="btnFirmarBox" class="no-print bg-slate-50 p-4 rounded-lg border border-slate-200 flex items-center justify-between">
+                                <div>
+                                    <p class="font-bold text-slate-800 text-xs">Emitir Firma de Conformidad</p>
+                                    <p class="text-[11px] text-slate-500">Firmarás con el rol y usuario activo actual.</p>
+                                </div>
+                                <button onclick="firmarActuacionActual()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow transition-colors flex items-center gap-1.5">
+                                    <i class="fa-solid fa-signature"></i> Firmar con mi Rol
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PERFIL DE USUARIO, MAIL Y ROL CON ELIMINACIÓN DEFINITIVA -->
+    <div id="modalEditUsuario" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span>EDITAR DATOS, MAIL Y ROL DE USUARIO</span>
+                <button onclick="closeEditUsuarioModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveEditUsuario(event)" class="p-4 space-y-2.5 text-xs">
+                <input type="hidden" id="editUserIndex">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Nombre</label>
+                        <input type="text" id="editUserNombre" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Apellido</label>
+                        <input type="text" id="editUserApellido" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">DNI</label>
+                        <input type="text" id="editUserDni" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">CUIL</label>
+                        <input type="text" id="editUserCuil" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Correo Electrónico (Email)</label>
+                    <input type="email" id="editUserEmail" class="w-full border border-slate-300 rounded p-1.5 font-mono" placeholder="usuario@correo.com" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Teléfono</label>
+                    <input type="text" id="editUserTelefono" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Asignar Rol / Estado</label>
+                    <select id="editUserRol" class="w-full border border-slate-300 rounded p-1.5 font-bold bg-slate-50">
+                        <option value="Socio">Socio</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Tesorero">Tesorero</option>
+                        <option value="Presidente">Presidente</option>
+                        <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                        <option value="Inactivo">Inactivo (Baja Lógica)</option>
+                    </select>
+                </div>
+                
+                <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
+                    <button type="button" onclick="eliminarDefinitivamenteUsuario()" class="only-tesorero px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white rounded font-bold text-xs flex items-center gap-1">
+                        <i class="fa-solid fa-skull-crossbones"></i> Eliminación Definitiva
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="closeEditUsuarioModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                        <button type="submit" class="px-4 py-1.5 bg-appBlue text-white rounded font-bold">Guardar Cambios</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL MODIFICAR VALOR DE CUOTA -->
+    <div id="modalModificarCuota" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-appYellow text-slate-900 px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span><i class="fa-solid fa-coins mr-1"></i> MODIFICAR VALOR DE CUOTA SOCIAL</span>
+                <button onclick="closeModificarCuotaModal()" class="text-slate-700 hover:text-black"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveNuevoValorCuota(event)" class="p-4 space-y-3 text-xs">
+                <p class="text-[11px] text-slate-500">Nota: Los pagos históricos conservarán el monto abonado en su momento.</p>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nuevo Valor Vigente ($)</label>
+                    <input type="number" id="inputNuevoValorCuota" min="1" step="50" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold text-sm" required>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeModificarCuotaModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                    <button type="submit" class="px-3 py-1.5 bg-slate-900 text-white rounded font-bold">Actualizar Tarifa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR COBRO DE CUOTA CON SELECCIÓN DE MESES -->
+    <div id="modalCobroMeses" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-appGreen text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span><i class="fa-solid fa-cash-register mr-1"></i> COBRO DE CUOTA SOCIAL</span>
+                <button onclick="closeCobroMesesModal()" class="text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="confirmarCobroMeses(event)" class="p-4 space-y-3 text-xs">
+                <input type="hidden" id="cobroSocioDni">
+                <input type="hidden" id="cobroSocioNombre">
+                
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <p class="font-bold text-slate-800 text-sm" id="cobroSocioTitle">---</p>
+                    <p class="text-slate-500 text-[11px]">Seleccioná los meses a abonar a la tarifa vigente ($<span id="cobroValorUnitario">1000</span> c/u):</p>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-2">Año 2026:</label>
+                    <div id="checkboxesMeses" class="grid grid-cols-3 gap-2">
+                        <!-- Checkboxes generados dinámicamente -->
+                    </div>
+                </div>
+
+                <div class="bg-green-50 p-3 rounded-lg border border-green-200 flex justify-between items-center">
+                    <span class="font-bold text-slate-700">TOTAL A COBRAR:</span>
+                    <span id="cobroTotalCalculado" class="font-bold text-lg text-green-700 font-mono">$0,00</span>
+                </div>
+
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeCobroMesesModal()" class="px-3.5 py-2 bg-slate-200 rounded-lg font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-appGreen hover:bg-green-700 text-white rounded-lg font-bold">Registrar Cobro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO MOVIMIENTO -->
+    <div id="modalMovimiento" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white px-4 py-3.5 flex justify-between items-center text-xs font-bold">
+                <span>NUEVO ASIENTO CONTABLE</span>
+                <button onclick="closeMovimientoModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="saveMovimiento(event)" class="p-4 space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tipo</label>
+                        <select id="movTipo" class="w-full border border-slate-300 rounded-lg p-2 font-bold" required>
+                            <option value="ingreso">INGRESO (+)</option>
+                            <option value="egreso">EGRESO (-)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Monto ($)</label>
+                        <input type="number" id="movMonto" step="0.01" min="1" placeholder="0.00" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Categoría</label>
+                    <select id="movCategoria" class="w-full border border-slate-300 rounded-lg p-2" required>
+                        <option value="Cuota Social">Cuota Social</option>
+                        <option value="Servicio Luz">Servicio Luz</option>
+                        <option value="Servicio Gas">Servicio Gas</option>
+                        <option value="Servicio Agua">Servicio Agua</option>
+                        <option value="Municipio / Tasas">Municipio / Tasas</option>
+                        <option value="ARCA (Impuestos)">ARCA (Impuestos)</option>
+                        <option value="Eventos / Beneficios">Eventos / Beneficios</option>
+                        <option value="Mantenimiento">Mantenimiento</option>
+                        <option value="Artículos Limpieza">Artículos de Limpieza</option>
+                        <option value="Varios" selected>VARIOS (Gastos/Ingresos Varios)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Concepto / Detalle</label>
+                    <input type="text" id="movConcepto" class="w-full border border-slate-300 rounded-lg p-2" required placeholder="Ej: Compra de insumos libreria">
+                </div>
+                <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                    <button type="button" onclick="closeMovimientoModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white rounded-lg font-bold">Guardar Asiento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SALDO INICIAL ANTERIOR -->
+    <div id="modalSaldoInicial" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-sm rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span>CONFIGURAR SALDO ANTERIOR</span>
+                <button onclick="closeSaldoInicialModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveSaldoInicial(event)" class="p-4 space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Monto Saldo Inicial ($)</label>
+                    <input type="number" id="inputSaldoInicial" step="0.01" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold" placeholder="0.00" required>
+                </div>
+                <div class="pt-2 flex justify-end gap-2">
+                    <button type="button" onclick="closeSaldoInicialModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                    <button type="submit" class="px-3 py-1.5 bg-appGreen text-white rounded font-bold">Establecer Saldo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR DATOS ENTIDAD -->
+    <div id="modalEditEntidad" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-appVioletDark text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span>MODIFICAR DATOS DE LA ENTIDAD</span>
+                <button onclick="closeEditEntidadModal()" class="text-slate-300 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveEntidadDatos(event)" class="p-4 space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nombre de la Asociación</label>
+                    <input type="text" id="editEntNombre" class="w-full border border-slate-300 rounded-lg p-2" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">CUIT</label>
+                    <input type="text" id="editEntCuit" class="w-full border border-slate-300 rounded-lg p-2 font-mono" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nombre Presidente</label>
+                    <input type="text" id="editEntPresidente" class="w-full border border-slate-300 rounded-lg p-2" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Nombre Tesorero</label>
+                    <input type="text" id="editEntTesorero" class="w-full border border-slate-300 rounded-lg p-2" required>
+                </div>
+                <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                    <button type="button" onclick="closeEditEntidadModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-1.5 bg-appVioletDark text-white rounded font-bold">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL CREAR USUARIO MANUAL -->
+    <div id="modalCrearUsuarioManual" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-appGreen text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span>AGREGAR USUARIO DESDE SECRETARÍA</span>
+                <button onclick="closeCrearUsuarioManualModal()" class="text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveUsuarioManual(event)" class="p-4 space-y-2.5 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700">Nombre</label>
+                        <input type="text" id="manNombre" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700">Apellido</label>
+                        <input type="text" id="manApellido" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700">DNI</label>
+                        <input type="text" id="manDni" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700">CUIL</label>
+                        <input type="text" id="manCuil" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700">Correo Electrónico</label>
+                    <input type="email" id="manEmail" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700">Teléfono</label>
+                    <input type="text" id="manTelefono" class="w-full border border-slate-300 rounded p-1.5 font-mono" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700">Asignar Rol Inicial</label>
+                    <select id="manRol" class="w-full border border-slate-300 rounded p-1.5 font-bold">
+                        <option value="Socio" selected>Socio</option>
+                        <option value="Presidente">Presidente</option>
+                        <option value="Tesorero">Tesorero</option>
+                        <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                    </select>
+                </div>
+                <div class="pt-2 border-t border-slate-200 flex justify-end gap-2">
+                    <button type="button" onclick="closeCrearUsuarioManualModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-1.5 bg-appGreen text-white rounded font-bold">Alta de Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL REGISTRAR NUEVA ACTA EN PDF -->
+    <div id="modalNuevaActa" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-appRed text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
+                <span>REGISTRAR NUEVA ACTA OFICIAL</span>
+                <button onclick="closeNuevaActaModal()" class="text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form onsubmit="saveNuevaActa(event)" class="p-4 space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block font-bold text-slate-700">Número de Acta</label>
+                        <input type="text" id="actaNumero" class="w-full border border-slate-300 rounded p-1.5 font-mono" placeholder="Acta N° 01/2026" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700">Fecha de Reunión</label>
+                        <input type="date" id="actaFecha" class="w-full border border-slate-300 rounded p-1.5" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700">Título / Temática Trata</label>
+                    <input type="text" id="actaTitulo" class="w-full border border-slate-300 rounded p-1.5" placeholder="Asamblea Ordinaria de Memoria y Balance" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700">Firmantes Presentes</label>
+                    <input type="text" id="actaFirmantes" class="w-full border border-slate-300 rounded p-1.5" placeholder="Presidente, Tesorero, Revisor de Cuentas" required>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700">Adjuntar Enlace o Archivo PDF</label>
+                    <input type="text" id="actaLinkPdf" class="w-full border border-slate-300 rounded p-1.5 font-mono" placeholder="https://o_ruta_de_archivo.pdf">
+                </div>
+                <div class="pt-2 border-t border-slate-200 flex justify-end gap-2">
+                    <button type="button" onclick="closeNuevaActaModal()" class="px-3 py-1.5 bg-slate-200 rounded font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-1.5 bg-appRed text-white rounded font-bold">Guardar Acta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT PRINCIPAL LÓGICA Y FIREBASE REAL -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8Ditn44VNbX_guBhatYKD4ERNWyJsWQo",
+            authDomain: "asociacion-228.firebaseapp.com",
+            projectId: "asociacion-228",
+            storageBucket: "asociacion-228.firebasestorage.app",
+            messagingSenderId: "997844125374",
+            appId: "1:997844125374:web:2e3a98273c5aa43e3900ef",
+            measurementId: "G-PH8WFBF1RE"
+        };
+
+        let isFirebaseReady = false;
+        try {
+            if (firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
+                firebase.initializeApp(firebaseConfig);
+                isFirebaseReady = true;
+            }
+        } catch(e) { console.log("Firebase no listo, usando estado dinámico."); }
+
+        let valorCuotaSocial = 1000;
+        const MESES_ANIO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+        function openModificarCuotaModal() {
+            if (!currentUser || currentUser.role !== 'Tesorero') {
+                alert("ACCESO DENEGADO: Solo el Tesorero puede modificar el valor de la cuota social.");
+                return;
+            }
+            document.getElementById('inputNuevoValorCuota').value = valorCuotaSocial;
+            document.getElementById('modalModificarCuota').classList.remove('hidden');
+        }
+
+        function closeModificarCuotaModal() {
+            document.getElementById('modalModificarCuota').classList.add('hidden');
+        }
+
+        function saveNuevoValorCuota(e) {
+            e.preventDefault();
+            let nuevoVal = parseFloat(document.getElementById('inputNuevoValorCuota').value);
+            if (nuevoVal && nuevoVal > 0) {
+                valorCuotaSocial = nuevoVal;
+                closeModificarCuotaModal();
+                renderAll();
+                alert(`Valor vigente de la cuota social actualizado a $${valorCuotaSocial.toLocaleString('es-AR')}. Los pagos históricos se mantienen intactos.`);
+            }
+        }
+
+        function getMesesPagosSocio(nombreCompleto) {
+            let mesesPagos = [];
+            dbMovimientos.forEach(m => {
+                if (m.categoria === 'Cuota Social' && m.concepto.toLowerCase().includes(nombreCompleto.toLowerCase())) {
+                    MESES_ANIO.forEach(mes => {
+                        if (m.concepto.toLowerCase().includes(mes.toLowerCase()) && !mesesPagos.includes(mes)) {
+                            mesesPagos.push(mes);
+                        }
+                    });
+                }
+            });
+            return mesesPagos;
+        }
+
+        function calcularEstadoSocio(nombreCompleto) {
+            let mesesPagos = getMesesPagosSocio(nombreCompleto);
+            let mesActualIdx = new Date().getMonth();
+            let mesActualNombre = MESES_ANIO[mesActualIdx];
+
+            if (mesesPagos.includes(mesActualNombre)) {
+                return { estado: 'AL DÍA', colorClass: 'bg-green-100 text-green-800 border-green-300', mesesPagos };
+            } else {
+                return { estado: 'PENDIENTE', colorClass: 'bg-red-100 text-red-800 border-red-300', mesesPagos };
+            }
+        }
+
+        function openCobroMesesModal(dni, nombreCompleto) {
+            document.getElementById('cobroSocioDni').value = dni;
+            document.getElementById('cobroSocioNombre').value = nombreCompleto;
+            document.getElementById('cobroSocioTitle').textContent = nombreCompleto;
+            document.getElementById('cobroValorUnitario').textContent = valorCuotaSocial.toLocaleString('es-AR');
+
+            let mesesPagos = getMesesPagosSocio(nombreCompleto);
+            let container = document.getElementById('checkboxesMeses');
+            
+            container.innerHTML = MESES_ANIO.map((mes, idx) => {
+                let yaPago = mesesPagos.includes(mes);
+                return `
+                    <label class="flex items-center gap-1.5 p-2 rounded border ${yaPago ? 'bg-green-50 border-green-200 text-green-800' : 'bg-slate-50 border-slate-200 text-slate-700'}">
+                        <input type="checkbox" name="mesCobro" value="${mes}" ${yaPago ? 'checked disabled' : ''} onchange="recalcularTotalCobro()" class="rounded text-appGreen focus:ring-appGreen">
+                        <span class="text-[11px] font-bold">${mes} ${yaPago ? '✓' : ''}</span>
+                    </label>
+                `;
+            }).join('');
+
+            recalcularTotalCobro();
+            document.getElementById('modalCobroMeses').classList.remove('hidden');
+        }
+
+        function closeCobroMesesModal() {
+            document.getElementById('modalCobroMeses').classList.add('hidden');
+        }
+
+        function recalcularTotalCobro() {
+            let seleccionados = Array.from(document.querySelectorAll('input[name="mesCobro"]:checked:not(:disabled)'));
+            let total = seleccionados.length * valorCuotaSocial;
+            document.getElementById('cobroTotalCalculado').textContent = '$' + total.toLocaleString('es-AR');
+        }
+
+        function confirmarCobroMeses(e) {
+            e.preventDefault();
+            let nombreCompleto = document.getElementById('cobroSocioNombre').value;
+            let seleccionados = Array.from(document.querySelectorAll('input[name="mesCobro"]:checked:not(:disabled)')).map(c => c.value);
+
+            if (seleccionados.length === 0) {
+                alert("Por favor seleccioná al menos un mes a abonar.");
+                return;
+            }
+
+            let total = seleccionados.length * valorCuotaSocial;
+            let conceptoStr = `Cobro cuota social (${seleccionados.join(', ')}) - ${nombreCompleto} [Tarifa: $${valorCuotaSocial}]`;
+
+            let nuevoMov = {
+                id: Date.now(),
+                fecha: new Date().toISOString().split('T')[0],
+                tipo: 'ingreso',
+                categoria: 'Cuota Social',
+                concepto: conceptoStr,
+                monto: total
+            };
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('movimientos').add(nuevoMov)
+                    .then(() => {
+                        closeCobroMesesModal();
+                        renderAll();
+                        alert(`Cobro registrado con éxito por $${total.toLocaleString('es-AR')}`);
+                    })
+                    .catch(err => alert("Error en Firebase: " + err.message));
+            } else {
+                dbMovimientos.unshift(nuevoMov);
+                closeCobroMesesModal();
+                renderAll();
+                alert(`Cobro registrado con éxito por $${total.toLocaleString('es-AR')}`);
+            }
+        }
+
+        let currentUser = null;
+        let saldoInicialGlobal = 0;
+        let entidadDatos = {
+            nombre: "Asociación Civil Padres y Amigos 228",
+            cuit: "30-71234567-9",
+            presidente: "Ana Gómez",
+            tesorero: "Ricardo Iermito",
+            revisor: "Auditor Interno"
+        };
+
+        let dbUsers = [
+            { nombre: 'Ricardo', apellido: 'Iermito', dni: '25.123.456', cuil: '20-25123456-9', email: 'ricardoiermito@gmail.com', telefono: '2984-123456', direccion: 'General Roca', role: 'Tesorero' }
+        ];
+
+        let dbMovimientos = [
+            { id: 1, fecha: new Date().toISOString().split('T')[0], tipo: 'ingreso', categoria: 'Varios', concepto: 'Aporte inicial institucion', monto: 5000 }
+        ];
+
+        let dbActas = [
+            { id: 1, numero: 'Acta N° 01/2026', fecha: '2026-03-10', titulo: 'Constitución de Junta y Asignación de Roles', firmantes: 'Presidente, Tesorero', link: '#' }
+        ];
+
+        let dbFirmas = [
+            { rol: 'Tesorero', nombre: 'Ricardo Iermito', fecha: '2026-03-10 10:30', estado: 'Firmado Digitalmente' },
+            { rol: 'Presidente', nombre: 'Ana Gómez', fecha: '2026-03-10 11:15', estado: 'Firmado Digitalmente' }
+        ];
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            if (isFirebaseReady) {
+                firebase.auth().signInWithEmailAndPassword(email, pass)
+                    .then(userCred => { loadUserProfile(userCred.user.uid, email); })
+                    .catch(err => {
+                        if (email === 'ricardoiermito@gmail.com') {
+                            setAdminSession(email);
+                        } else {
+                            showLoginError("Error de ingreso: " + err.message);
+                        }
+                    });
+            } else {
+                setAdminSession(email);
+            }
+        }
+
+        function setAdminSession(email) {
+            currentUser = { email, role: (email === 'ricardoiermito@gmail.com') ? 'Tesorero' : 'Socio', name: email };
+            document.getElementById('authContainer').classList.add('hidden');
+            document.getElementById('appScreen').classList.remove('hidden');
+            document.getElementById('displayUsername').textContent = email;
+            document.getElementById('displayRoleBadge').textContent = currentUser.role;
+            cargarDatosDesdeFirestore();
+            renderAll();
+        }
+
+        function loadUserProfile(uid, email) {
+            firebase.firestore().collection('usuarios').doc(uid).get().then(doc => {
+                if (doc.exists) {
+                    currentUser = doc.data();
+                    if (currentUser.email === 'ricardoiermito@gmail.com') currentUser.role = 'Tesorero';
+                    document.getElementById('authContainer').classList.add('hidden');
+                    document.getElementById('appScreen').classList.remove('hidden');
+                    document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+                    document.getElementById('displayRoleBadge').textContent = currentUser.role;
+                    cargarDatosDesdeFirestore();
+                    renderAll();
+                } else {
+                    setAdminSession(email);
+                }
+            });
+        }
+
+        function cargarDatosDesdeFirestore() {
+            if (!isFirebaseReady) return;
+
+            firebase.firestore().collection('usuarios').onSnapshot(snapshot => {
+                let tempUsers = [];
+                snapshot.forEach(doc => {
+                    const uData = { idDoc: doc.id, ...doc.data() };
+                    tempUsers.push(uData);
+
+                    if (currentUser && (doc.id === currentUser.idDoc || uData.email === currentUser.email)) {
+                        currentUser = { ...currentUser, ...uData };
+                        document.getElementById('displayRoleBadge').textContent = currentUser.role || 'Socio';
+                        document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+                    }
+                });
+                if (tempUsers.length > 0) {
+                    dbUsers = tempUsers;
+                    renderAll();
+                }
+            });
+
+            firebase.firestore().collection('movimientos').onSnapshot(snapshot => {
+                let tempMovs = [];
+                snapshot.forEach(doc => {
+                    tempMovs.push(doc.data());
+                });
+                if (tempMovs.length > 0) {
+                    dbMovimientos = tempMovs;
+                    renderAll();
+                }
+            });
+
+            firebase.firestore().collection('actas').onSnapshot(snapshot => {
+                let tempActas = [];
+                snapshot.forEach(doc => {
+                    tempActas.push(doc.data());
+                });
+                if (tempActas.length > 0) {
+                    dbActas = tempActas;
+                    renderAll();
+                }
+            });
+        }
+
+        function showLoginError(msg) {
+            const errDiv = document.getElementById('loginError');
+            errDiv.textContent = msg;
+            errDiv.classList.remove('hidden');
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            const userData = {
+                nombre: document.getElementById('regNombre').value,
+                apellido: document.getElementById('regApellido').value,
+                dni: document.getElementById('regDni').value,
+                cuil: document.getElementById('regCuil').value,
+                direccion: document.getElementById('regDireccion').value,
+                telefono: document.getElementById('regTelefono').value,
+                email: document.getElementById('regEmail').value.trim(),
+                role: 'Pendiente'
+            };
+            const pass = document.getElementById('regPassword').value;
+
+            if (isFirebaseReady) {
+                firebase.auth().createUserWithEmailAndPassword(userData.email, pass)
+                    .then(userCred => {
+                        return firebase.firestore().collection('usuarios').doc(userCred.user.uid).set(userData);
+                    })
+                    .then(() => {
+                        alert("Solicitud registrada con éxito. El Tesorero aprobará tu cuenta.");
+                        showAuthScreen('login');
+                    })
+                    .catch(err => { alert("Error: " + err.message); });
+            } else {
+                dbUsers.push(userData);
+                alert("Solicitud cargada en el panel del Secretario.");
+                showAuthScreen('login');
+            }
+        }
+
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            alert("Si el servicio de correo está activo en Firebase, se enviará el enlace de recuperación.");
+        }
+
+        function handleLogout() {
+            if (isFirebaseReady) firebase.auth().signOut();
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
+        }
+
+        function showAuthScreen(screen) {
+            document.getElementById('formLogin').classList.add('hidden');
+            document.getElementById('formRegister').classList.add('hidden');
+            document.getElementById('formForgot').classList.add('hidden');
+            if (screen === 'login') document.getElementById('formLogin').classList.remove('hidden');
+            if (screen === 'register') document.getElementById('formRegister').classList.remove('hidden');
+            if (screen === 'forgot') document.getElementById('formForgot').classList.remove('hidden');
+        }
+
+        function switchTab(tabKey) {
+            if (!currentUser) return;
+            let rol = currentUser.role || 'Socio';
+
+            if ((rol === 'Socio' || rol === 'Pendiente') && tabKey !== 'miperfil') {
+                alert("ACCESO RESTRINGIDO: Los socios solo tienen permiso para ver su estado de socio e historial de cuotas.");
+                tabKey = 'miperfil';
+            }
+
+            if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Presidente' && rol !== 'Revisor de Cuentas')) {
+                alert("ACCESO RESTRINGIDO: Solo la Comisión Directiva autorizada puede acceder a la gestión de usuarios.");
+                tabKey = (rol === 'Socio' || rol === 'Pendiente') ? 'miperfil' : 'dashboard';
+            }
+
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active', 'bg-slate-700', 'text-white'));
+            
+            const targetPane = document.getElementById(`tab-${tabKey}`);
+            const targetNav = document.getElementById(`nav-${tabKey}`);
+            
+            if (targetPane) targetPane.classList.remove('hidden');
+            if (targetNav) targetNav.classList.add('active', 'bg-slate-700', 'text-white');
+        }
+
+        function renderAll() {
+            aplicarPermisosPorRol();
+            renderMiPerfilSocio();
+            renderEntidad();
+            renderCaja();
+            renderSocios();
+            renderUsuariosAdmin();
+            renderActas();
+            renderArqueo();
+            renderFirmas();
+        }
+
+        function aplicarPermisosPorRol() {
+            if (!currentUser) return;
+            const rol = currentUser.role || 'Socio';
+
+            const navDashboard = document.getElementById('nav-dashboard');
+            const navCaja = document.getElementById('nav-caja');
+            const navCuotas = document.getElementById('nav-cuotas');
+            const navSecretaria = document.getElementById('nav-secretaria');
+            const navUsuarios = document.getElementById('nav-usuarios');
+            const navArqueo = document.getElementById('nav-arqueo');
+            const navMiPerfil = document.getElementById('nav-miperfil');
+
+            if (rol === 'Socio' || rol === 'Pendiente') {
+                if (navDashboard) navDashboard.classList.add('hidden');
+                if (navCaja) navCaja.classList.add('hidden');
+                if (navCuotas) navCuotas.classList.add('hidden');
+                if (navSecretaria) navSecretaria.classList.add('hidden');
+                if (navUsuarios) navUsuarios.classList.add('hidden');
+                if (navArqueo) navArqueo.classList.add('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                switchTab('miperfil');
+            } else if (rol === 'Revisor de Cuentas') {
+                // REVISOR DE CUENTAS: LECTURA TOTAL Y DESCARGAS
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+            } else if (rol === 'Presidente' || rol === 'Vocal') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.add('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+            } else if (rol === 'Tesorero') {
+                if (navDashboard) navDashboard.classList.remove('hidden');
+                if (navCaja) navCaja.classList.remove('hidden');
+                if (navCuotas) navCuotas.classList.remove('hidden');
+                if (navSecretaria) navSecretaria.classList.remove('hidden');
+                if (navUsuarios) navUsuarios.classList.remove('hidden');
+                if (navArqueo) navArqueo.classList.remove('hidden');
+                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
+
+                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
+            }
+        }
+
+        function renderMiPerfilSocio() {
+            if (!currentUser) return;
+            const miNombre = currentUser.nombre ? `${currentUser.nombre} ${currentUser.apellido}` : currentUser.name || currentUser.email;
+            
+            document.getElementById('miPerfilNombre').textContent = miNombre;
+            document.getElementById('miPerfilDni').textContent = currentUser.dni || 'S/D';
+            document.getElementById('miPerfilCuil').textContent = currentUser.cuil || 'S/D';
+            document.getElementById('miPerfilEmail').textContent = currentUser.email || 'S/D';
+            document.getElementById('miPerfilTelefono').textContent = currentUser.telefono || 'S/D';
+
+            let res = calcularEstadoSocio(miNombre);
+            const badgeEl = document.getElementById('miEstadoBadge');
+            badgeEl.textContent = res.estado;
+            badgeEl.className = `px-3 py-1 font-bold text-xs rounded-full uppercase border ${res.colorClass}`;
+
+            const resumenEl = document.getElementById('miPerfilCuotasResumen');
+            resumenEl.textContent = res.estado;
+            resumenEl.className = `font-bold text-xs font-mono px-2 py-0.5 rounded border ${res.colorClass}`;
+
+            const tableBody = document.getElementById('miCuotasTableBody');
+            let filasMeses = MESES_ANIO.map(mes => {
+                let pago = res.mesesPagos.includes(mes);
+                let mov = dbMovimientos.find(m => m.categoria === 'Cuota Social' && m.concepto.toLowerCase().includes(miNombre.toLowerCase()) && m.concepto.toLowerCase().includes(mes.toLowerCase()));
+                
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 text-slate-600 font-bold">${mes} 2026</td>
+                        <td class="p-3 font-sans">${mov ? mov.concepto : 'Cuota Social Mensual'}</td>
+                        <td class="p-3 font-bold font-mono ${pago ? 'text-green-600' : 'text-slate-400'}">${mov ? '$' + mov.monto.toLocaleString('es-AR') : '---'}</td>
+                        <td class="p-3">
+                            <span class="px-2.5 py-1 text-[10px] font-bold rounded ${pago ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-red-100 text-red-800 border border-red-300'}">
+                                ${pago ? 'PAGADO ✓' : 'PENDIENTE ✗'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tableBody.innerHTML = filasMeses;
+        }
+
+        function renderFirmas() {
+            const container = document.getElementById('firmasConformidadContainer');
+            const btnBox = document.getElementById('btnFirmarBox');
+            if (!container) return;
+
+            const rolesComision = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
+            
+            container.innerHTML = rolesComision.map(rol => {
+                let firmaEncontrada = dbFirmas.find(f => f.rol === rol);
+                if (firmaEncontrada) {
+                    return `
+                        <div class="bg-green-50 border border-green-200 p-3.5 rounded-lg space-y-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-green-200 text-green-800 rounded uppercase">${rol}</span>
+                            <p class="font-bold text-slate-900 text-xs mt-1">${firmaEncontrada.nombre}</p>
+                            <p class="text-[10px] text-green-700 font-mono"><i class="fa-solid fa-circle-check mr-1"></i> ${firmaEncontrada.estado}</p>
+                            <p class="text-[10px] text-slate-400 font-mono">${firmaEncontrada.fecha}</p>
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-lg space-y-1">
+                            <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-700 rounded uppercase">${rol}</span>
+                            <p class="font-bold text-slate-400 text-xs mt-1">Pendiente de firma</p>
+                            <p class="text-[10px] text-amber-600 font-mono"><i class="fa-solid fa-clock mr-1"></i> Aguardando rúbrica</p>
+                        </div>
+                    `;
+                }
+            }).join('');
+
+            if (btnBox && currentUser) {
+                if (currentUser.role === 'Socio' || currentUser.role === 'Pendiente') {
+                    btnBox.classList.add('hidden');
+                } else {
+                    btnBox.classList.remove('hidden');
+                }
+            }
+        }
+
+        function firmarActuacionActual() {
+            if (!currentUser) return;
+            let rolActual = currentUser.role;
+
+            const rolesAutorizados = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
+            if (!rolesAutorizados.includes(rolActual)) {
+                alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma en actas y balances de la Asociación.");
+                return;
+            }
+
+            let nombreCompleto = currentUser.nombre ? `${currentUser.nombre} ${currentUser.apellido}` : currentUser.name || currentUser.email;
+            let fechaStr = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+            dbFirmas = dbFirmas.filter(f => f.rol !== rolActual);
+            dbFirmas.push({
+                rol: rolActual,
+                nombre: nombreCompleto,
+                fecha: fechaStr,
+                estado: 'Firmado Digitalmente'
+            });
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('firmas').add({
+                    rol: rolActual,
+                    nombre: nombreCompleto,
+                    fecha: fechaStr,
+                    estado: 'Firmado Digitalmente'
+                }).catch(e => console.log(e));
+            }
+
+            alert(`Firma registrada con éxito bajo el rol de ${rolActual}.`);
+            renderFirmas();
+        }
+
+        function renderEntidad() {
+            document.getElementById('instNombre').textContent = entidadDatos.nombre;
+            document.getElementById('instCuit').textContent = entidadDatos.cuit;
+            document.getElementById('cdPresidente').textContent = entidadDatos.presidente;
+            document.getElementById('cdTesorero').textContent = entidadDatos.tesorero;
+        }
+
+        function renderCaja() {
+            const body = document.getElementById('cajaTableBody');
+            const dashBody = document.getElementById('dashRecentTable');
+            const desde = document.getElementById('filterFechaDesde').value;
+            const hasta = document.getElementById('filterFechaHasta').value;
+
+            let filtrados = dbMovimientos.filter(m => {
+                if (desde && m.fecha < desde) return false;
+                if (hasta && m.fecha > hasta) return false;
+                return true;
+            });
+
+            let totalIngresos = 0;
+            let totalEgresos = 0;
+
+            body.innerHTML = filtrados.map(m => {
+                if (m.tipo === 'ingreso') totalIngresos += m.monto;
+                if (m.tipo === 'egreso') totalEgresos += m.monto;
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-slate-400">#${m.id}</td>
+                        <td class="p-3 text-slate-600">${m.fecha}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] text-slate-700">${m.categoria}</span></td>
+                        <td class="p-3 font-bold text-slate-800 font-sans">${m.concepto}</td>
+                        <td class="p-3 text-right font-bold text-green-600">${m.tipo === 'ingreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
+                        <td class="p-3 text-right font-bold text-red-600">${m.tipo === 'egreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
+                        <td class="p-3 text-center action-col no-print">
+                            <button onclick="deleteMovimiento(${m.id})" class="only-tesorero text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            dashBody.innerHTML = dbMovimientos.slice(0, 5).map(m => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-mono">${m.fecha}</td>
+                    <td class="p-3 font-sans"><span class="px-2 py-0.5 bg-slate-100 border rounded text-[10px]">${m.categoria}</span></td>
+                    <td class="p-3 font-bold font-sans">${m.concepto}</td>
+                    <td class="p-3 uppercase text-[10px] font-bold ${m.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'}">${m.tipo}</td>
+                    <td class="p-3 text-right font-bold">$${m.monto.toLocaleString('es-AR')}</td>
+                </tr>
+            `).join('');
+
+            let saldoFinal = saldoInicialGlobal + totalIngresos - totalEgresos;
+            document.getElementById('dashSaldo').textContent = '$' + saldoFinal.toLocaleString('es-AR');
+            document.getElementById('dashIngresos').textContent = '$' + totalIngresos.toLocaleString('es-AR');
+            document.getElementById('dashEgresos').textContent = '$' + totalEgresos.toLocaleString('es-AR');
+        }
+
+        function limpiarFiltrosFecha() {
+            document.getElementById('filterFechaDesde').value = '';
+            document.getElementById('filterFechaHasta').value = '';
+            renderCaja();
+        }
+
+        function renderSocios() {
+            const body = document.getElementById('sociosTableBody');
+            const displayCuota = document.getElementById('displayValorCuota');
+            if (displayCuota) displayCuota.textContent = '$' + valorCuotaSocial.toLocaleString('es-AR');
+
+            // INCLUSIÓN: Tanto Socios como la Comisión Directiva figuran para abonar la cuota
+            const sociosList = dbUsers.filter(u => u.role !== 'Inactivo' && u.role !== 'Pendiente');
+            let sociosAlDiaCount = 0;
+
+            body.innerHTML = sociosList.map(s => {
+                let nombreCompleto = `${s.nombre} ${s.apellido}`;
+                let res = calcularEstadoSocio(nombreCompleto);
+                if (res.estado === 'AL DÍA') sociosAlDiaCount++;
+
+                let badgesMeses = MESES_ANIO.map(m => {
+                    let pago = res.mesesPagos.includes(m);
+                    return `<span class="px-1 py-0.5 text-[9px] font-bold rounded ${pago ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-slate-100 text-slate-400'}" title="${m}">${m.substring(0,3)}</span>`;
+                }).join(' ');
+
+                return `
+                    <tr class="hover:bg-slate-50">
+                        <td class="p-3 font-bold text-slate-600">${s.dni}</td>
+                        <td class="p-3 font-bold text-slate-900 font-sans">${nombreCompleto}</td>
+                        <td class="p-3 text-slate-600 font-sans"><span class="px-2 py-0.5 bg-purple-100 text-purple-800 rounded font-bold text-[10px]">${s.role}</span></td>
+                        <td class="p-3 space-y-1">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${res.colorClass}">${res.estado}</span>
+                            <div class="flex flex-wrap gap-1 mt-1">${badgesMeses}</div>
+                        </td>
+                        <td class="p-3 text-center font-sans no-print">
+                            <button onclick="openCobroMesesModal('${s.dni}', '${nombreCompleto}')" class="only-tesorero px-2.5 py-1.5 bg-appGreen hover:bg-green-700 text-white rounded-lg font-bold text-[11px] shadow">
+                                <i class="fa-solid fa-cash-register mr-1"></i> Cobrar Cuota
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('dashSociosCount').textContent = `${sociosAlDiaCount} / ${sociosList.length}`;
+        }
+
+        function renderUsuariosAdmin() {
+            const body = document.getElementById('usuariosAdminTable');
+            body.innerHTML = dbUsers.map((u, index) => {
+                let badgeClass = 'bg-green-100 text-green-800';
+                if (u.role === 'Pendiente') badgeClass = 'bg-amber-100 text-amber-800';
+                if (u.role === 'Inactivo') badgeClass = 'bg-red-100 text-red-800 border border-red-300';
+                if (u.role === 'Tesorero' || u.role === 'Presidente' || u.role === 'Revisor de Cuentas') badgeClass = 'bg-purple-100 text-purple-800 font-bold';
+
+                return `
+                <tr class="hover:bg-slate-50 ${u.role === 'Inactivo' ? 'bg-red-50/50 opacity-75' : ''}">
+                    <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
+                    <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
+                    <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
+                            ${(u.role || 'Socio').toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center space-x-1 no-print">
+                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-tesorero px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
+                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-tesorero px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
+                        <button onclick="openEditUsuarioModal(${index})" class="only-tesorero px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
+                        <button onclick="darDeBajaUsuario(${index})" class="only-tesorero px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
+                    </td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        function darDeBajaUsuario(index) {
+            let u = dbUsers[index];
+            if (confirm(`¿Deseas dar de baja (inactivar) a ${u.nombre} ${u.apellido}? Se conservará todo su historial.`)) {
+                u.role = 'Inactivo';
+                if (isFirebaseReady && u.idDoc) {
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Inactivo' })
+                        .then(() => console.log("Usuario inactivado en Firestore"));
+                }
+                renderAll();
+            }
+        }
+
+        function reactivarUsuario(index) {
+            let u = dbUsers[index];
+            if (confirm(`¿Deseas reactivar al usuario ${u.nombre} ${u.apellido} como Socio activo?`)) {
+                u.role = 'Socio';
+                if (isFirebaseReady && u.idDoc) {
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
+                        .then(() => console.log("Usuario reactivado en Firestore"));
+                }
+                renderAll();
+            }
+        }
+
+        // FUNCIONES DE EDICIÓN DE PERFIL, EMAIL Y ELIMINACIÓN DEFINITIVA
+        function openEditUsuarioModal(index) {
+            let u = dbUsers[index];
+            document.getElementById('editUserIndex').value = index;
+            document.getElementById('editUserNombre').value = u.nombre || '';
+            document.getElementById('editUserApellido').value = u.apellido || '';
+            document.getElementById('editUserDni').value = u.dni || '';
+            document.getElementById('editUserCuil').value = u.cuil || '';
+            document.getElementById('editUserEmail').value = u.email || '';
+            document.getElementById('editUserTelefono').value = u.telefono || '';
+            document.getElementById('editUserRol').value = u.role || 'Socio';
+            document.getElementById('modalEditUsuario').classList.remove('hidden');
+        }
+
+        function closeEditUsuarioModal() {
+            document.getElementById('modalEditUsuario').classList.add('hidden');
+        }
+
+        function saveEditUsuario(e) {
+            e.preventDefault();
+            let i = document.getElementById('editUserIndex').value;
+            let u = dbUsers[i];
+
+            u.nombre = document.getElementById('editUserNombre').value;
+            u.apellido = document.getElementById('editUserApellido').value;
+            u.dni = document.getElementById('editUserDni').value;
+            u.cuil = document.getElementById('editUserCuil').value;
+            u.email = document.getElementById('editUserEmail').value.trim();
+            u.telefono = document.getElementById('editUserTelefono').value;
+            u.role = document.getElementById('editUserRol').value;
+
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({
+                    nombre: u.nombre,
+                    apellido: u.apellido,
+                    dni: u.dni,
+                    cuil: u.cuil,
+                    email: u.email,
+                    telefono: u.telefono,
+                    role: u.role
+                }).then(() => alert("Datos de usuario y correo actualizados con éxito."));
+            }
+
+            closeEditUsuarioModal();
+            renderAll();
+        }
+
+        function eliminarDefinitivamenteUsuario() {
+            let i = document.getElementById('editUserIndex').value;
+            let u = dbUsers[i];
+
+            if (confirm(`⚠️ ¡ATENCIÓN! ¿Estás COMPLETAMENTE SEGURO de eliminar DEFINITIVAMENTE a ${u.nombre} ${u.apellido}? Esta acción borra su registro permanentemente.`)) {
+                if (isFirebaseReady && u.idDoc) {
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).delete()
+                        .then(() => alert("Usuario eliminado definitivamente de la base de datos Firestore."));
+                }
+                dbUsers.splice(i, 1);
+                closeEditUsuarioModal();
+                renderAll();
+            }
+        }
+
+        function openEditEntidadModal() {
+            document.getElementById('editEntNombre').value = entidadDatos.nombre;
+            document.getElementById('editEntCuit').value = entidadDatos.cuit;
+            document.getElementById('editEntPresidente').value = entidadDatos.presidente;
+            document.getElementById('editEntTesorero').value = entidadDatos.tesorero;
+            document.getElementById('modalEditEntidad').classList.remove('hidden');
+        }
+        function closeEditEntidadModal() { document.getElementById('modalEditEntidad').classList.add('hidden'); }
+
+        function saveEntidadDatos(e) {
+            e.preventDefault();
+            entidadDatos.nombre = document.getElementById('editEntNombre').value;
+            entidadDatos.cuit = document.getElementById('editEntCuit').value;
+            entidadDatos.presidente = document.getElementById('editEntPresidente').value;
+            entidadDatos.tesorero = document.getElementById('editEntTesorero').value;
+            closeEditEntidadModal();
+            renderAll();
+        }
+
+        function openCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); }
+        function closeCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.add('hidden'); }
+
+        function saveUsuarioManual(e) {
+            e.preventDefault();
+            const nuevoUsr = {
+                nombre: document.getElementById('manNombre').value,
+                apellido: document.getElementById('manApellido').value,
+                dni: document.getElementById('manDni').value,
+                cuil: document.getElementById('manCuil').value,
+                email: document.getElementById('manEmail').value.trim(),
+                telefono: document.getElementById('manTelefono').value,
+                role: document.getElementById('manRol').value,
+                fechaRegistro: new Date().toISOString().split('T')[0]
+            };
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('usuarios').add(nuevoUsr)
+                    .then(() => {
+                        closeCrearUsuarioManualModal();
+                        alert("Usuario agregado con éxito a la base de datos.");
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            } else {
+                dbUsers.push(nuevoUsr);
+                closeCrearUsuarioManualModal();
+                renderAll();
+            }
+        }
+
+        function aprobarUsuario(index) {
+            dbUsers[index].role = 'Socio';
+            let u = dbUsers[index];
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
+                    .then(() => console.log("Usuario aprobado en Firestore"));
+            }
+            renderAll();
+        }
+
+        function renderActas() {
+            const body = document.getElementById('actasTableBody');
+            body.innerHTML = dbActas.map(a => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold">${a.numero}</td>
+                    <td class="p-3">${a.fecha}</td>
+                    <td class="p-3 font-sans font-bold">${a.titulo}</td>
+                    <td class="p-3 font-sans">${a.firmantes}</td>
+                    <td class="p-3 text-center font-sans no-print">
+                        <a href="${a.link}" target="_blank" class="px-2.5 py-1 bg-appRed text-white font-bold rounded text-[11px] inline-flex items-center gap-1">
+                            <i class="fa-solid fa-file-pdf"></i> Descargar / Ver
+                        </a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openNuevaActaModal() { document.getElementById('modalNuevaActa').classList.remove('hidden'); }
+        function closeNuevaActaModal() { document.getElementById('modalNuevaActa').classList.add('hidden'); }
+
+        function saveNuevaActa(e) {
+            e.preventDefault();
+            dbActas.unshift({
+                id: Date.now(),
+                numero: document.getElementById('actaNumero').value,
+                fecha: document.getElementById('actaFecha').value,
+                titulo: document.getElementById('actaTitulo').value,
+                firmantes: document.getElementById('actaFirmantes').value,
+                link: document.getElementById('actaLinkPdf').value || '#'
+            });
+            closeNuevaActaModal();
+            renderAll();
+        }
+
+        function openSaldoInicialModal() { document.getElementById('modalSaldoInicial').classList.remove('hidden'); }
+        function closeSaldoInicialModal() { document.getElementById('modalSaldoInicial').classList.add('hidden'); }
+
+        function saveSaldoInicial(e) {
+            e.preventDefault();
+            saldoInicialGlobal = parseFloat(document.getElementById('inputSaldoInicial').value) || 0;
+            closeSaldoInicialModal();
+            renderAll();
+        }
+
+        function renderArqueo() {
+            let ingresos = dbMovimientos.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            let egresos = dbMovimientos.filter(m => m.tipo === 'egreso').reduce((a, b) => a + b.monto, 0);
+            let neto = ingresos - egresos;
+            let finalSaldo = saldoInicialGlobal + neto;
+
+            document.getElementById('arqueoSaldoInicial').textContent = '$' + saldoInicialGlobal.toLocaleString('es-AR');
+            document.getElementById('arqueoFlujoNeto').textContent = '$' + neto.toLocaleString('es-AR');
+            document.getElementById('arqueoSaldoFinal').textContent = '$' + finalSaldo.toLocaleString('es-AR');
+        }
+
+        function openMovimientoModal() { document.getElementById('modalMovimiento').classList.remove('hidden'); }
+        function closeMovimientoModal() { document.getElementById('modalMovimiento').classList.add('hidden'); }
+
+        function saveMovimiento(e) {
+            e.preventDefault();
+            const nuevoMov = {
+                id: Date.now(),
+                fecha: new Date().toISOString().split('T')[0],
+                tipo: document.getElementById('movTipo').value,
+                categoria: document.getElementById('movCategoria').value,
+                concepto: document.getElementById('movConcepto').value,
+                monto: parseFloat(document.getElementById('movMonto').value)
+            };
+
+            if (isFirebaseReady) {
+                firebase.firestore().collection('movimientos').add(nuevoMov)
+                    .then(() => {
+                        closeMovimientoModal();
+                    })
+                    .catch(err => alert("Error al guardar en Firebase: " + err.message));
+            } else {
+                dbMovimientos.unshift(nuevoMov);
+                closeMovimientoModal();
+                renderAll();
+            }
+        }
+
+        function deleteMovimiento(id) {
+            if (confirm("¿Eliminar este registro contable?")) {
+                dbMovimientos = dbMovimientos.filter(m => m.id !== id);
+                renderAll();
+            }
+        }
+    </script>
+</body>
+</html>

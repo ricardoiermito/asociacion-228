@@ -548,14 +548,8 @@
                                         <option value="11">Diciembre</option>
                                     </select>
                                 </div>
-                                <button onclick="window.print()" class="px-3.5 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors">
-                                    <i class="fa-solid fa-file-pdf"></i> Imprimir Balance PDF
-                                </button>
-                                <button onclick="descargarPdfPadron()" class="only-comision px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors" title="Descargar Padrón Oficial">
-                                    <i class="fa-solid fa-users-rectangle"></i> PDF Padrón
-                                </button>
-                                <button onclick="descargarPdfLibroCaja()" class="only-comision px-3.5 py-2 bg-appOrange hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors" title="Descargar Libro de Caja">
-                                    <i class="fa-solid fa-book-open"></i> PDF Libro Caja
+                                <button onclick="window.print()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                                    <i class="fa-solid fa-file-pdf"></i> Imprimir PDF Mensual
                                 </button>
                             </div>
                         </div>
@@ -1088,46 +1082,18 @@
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPassword').value;
 
-            // Super usuario fijo inmodificable con todos los permisos
-            if (email === 'admin' && pass === 'admin') {
-                currentUser = { 
-                    email: 'admin', 
-                    role: 'Tesorero', 
-                    nombre: 'Administrador', 
-                    apellido: 'General', 
-                    dni: '00.000.000', 
-                    cuil: '20-00000000-0',
-                    telefono: 'S/D',
-                    esSuperAdmin: true 
-                };
-                document.getElementById('authContainer').classList.add('hidden');
-                document.getElementById('appScreen').classList.remove('hidden');
-                document.getElementById('displayUsername').textContent = 'ADMINISTRADOR';
-                document.getElementById('displayRoleBadge').textContent = 'TESORERO (SUPERADMIN)';
-                renderAll();
-                return;
-            }
-
             if (isFirebaseReady) {
                 firebase.auth().signInWithEmailAndPassword(email, pass)
-                    .then(userCred => { 
-                        loadUserProfile(userCred.user.uid, email); 
-                    })
+                    .then(userCred => { loadUserProfile(userCred.user.uid, email); })
                     .catch(err => {
-                        showLoginError("Error de ingreso: Credenciales inválidas o cuenta no registrada. (" + err.message + ")");
+                        if (email === 'ricardoiermito@gmail.com') {
+                            setAdminSession(email);
+                        } else {
+                            showLoginError("Error de ingreso: " + err.message);
+                        }
                     });
             } else {
-                let socioLocal = dbUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
-                if (socioLocal) {
-                    currentUser = socioLocal;
-                    document.getElementById('authContainer').classList.add('hidden');
-                    document.getElementById('appScreen').classList.remove('hidden');
-                    document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
-                    document.getElementById('displayRoleBadge').textContent = currentUser.role;
-                    renderAll();
-                } else {
-                    showLoginError("Usuario no encontrado en el sistema local.");
-                }
+                setAdminSession(email);
             }
         }
 
@@ -1583,36 +1549,27 @@
 
         function renderUsuariosAdmin() {
             const body = document.getElementById('usuariosAdminTable');
-            let listaCompleta = [
-                { email: 'admin', nombre: 'Administrador', apellido: 'General', dni: '00.000.000', cuil: '20-00000000-0', telefono: 'S/D', role: 'Tesorero', esAdminSistema: true },
-                ...dbUsers.filter(u => u.email !== 'admin')
-            ];
-            
-            body.innerHTML = listaCompleta.map((u, index) => {
+            body.innerHTML = dbUsers.map((u, index) => {
                 let badgeClass = 'bg-green-100 text-green-800';
                 if (u.role === 'Pendiente') badgeClass = 'bg-amber-100 text-amber-800';
                 if (u.role === 'Inactivo') badgeClass = 'bg-red-100 text-red-800 border border-red-300';
                 if (u.role === 'Tesorero' || u.role === 'Presidente' || u.role === 'Revisor de Cuentas') badgeClass = 'bg-purple-100 text-purple-800 font-bold';
 
-                let esAdminFijo = u.esAdminSistema || u.email === 'admin';
-
                 return `
                 <tr class="hover:bg-slate-50 ${u.role === 'Inactivo' ? 'bg-red-50/50 opacity-75' : ''}">
                     <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
-                    <td class="p-3 font-mono">DNI: ${u.dni || 'S/D'}<br>CUIL: ${u.cuil || 'S/D'}</td>
-                    <td class="p-3">Tel: ${u.telefono || 'S/D'}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
+                    <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
+                    <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
                     <td class="p-3">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                            ${(u.role || 'Socio').toUpperCase()} ${esAdminFijo ? '(SÚPER ADMIN)' : ''}
+                            ${(u.role || 'Socio').toUpperCase()}
                         </span>
                     </td>
                     <td class="p-3 text-center space-x-1 no-print">
-                        ${esAdminFijo ? '<span class="text-[10px] font-bold text-slate-400 italic">Inmodificable</span>' : `
-                            ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
-                            ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
-                            <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
-                            <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
-                        `}
+                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
+                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
+                        <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
+                        <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
                     </td>
                 </tr>
                 `;
@@ -1651,11 +1608,6 @@
         function openEditUsuarioModal(index) {
             if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: Tu rol no tiene permisos de modificación de usuarios.");
-                return;
-            }
-            // Si intenta editar al admin general fijo
-            if (index === 0 && dbUsers[index] && dbUsers[index].email === 'admin') {
-                alert("ACCESO DENEGADO: El superusuario 'admin' es inmodificable.");
                 return;
             }
             let u = dbUsers[index];
@@ -1729,10 +1681,6 @@
             }
             let i = document.getElementById('editUserIndex').value;
             let u = dbUsers[i];
-            if (u && u.email === 'admin') {
-                alert("ACCESO DENEGADO: El superusuario 'admin' no puede ser eliminado.");
-                return;
-            }
 
             if (confirm(`⚠️ ¡ATENCIÓN! ¿Estás COMPLETAMENTE SEGURO de eliminar DEFINITIVAMENTE a ${u.nombre} ${u.apellido}? Esta acción borra su registro permanentemente.`)) {
                 if (isFirebaseReady && u.idDoc) {
@@ -1995,142 +1943,5 @@
             }
         }
     </script>
-        function verificarPermisoComision() {
-            if (!currentUser) return false;
-            let rol = currentUser.role || 'Socio';
-            const rolesComision = ['Presidente', 'Tesorero', 'Secretario', 'Revisor de Cuentas', 'Vocal'];
-            if (!rolesComision.includes(rol)) {
-                alert("ACCESO DENEGADO: La descarga de informes y registros institucionales (Padrón y Libro de Caja) es una atribución exclusiva de la Comisión Directiva.");
-                return false;
-            }
-            return true;
-        }
-
-        function descargarPdfPadron() {
-            if (!verificarPermisoComision()) return;
-            
-            let padronHtml = `
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
-                    <h2 style="text-align: center; text-transform: uppercase; margin-bottom: 5px;">Asociación Civil Padres y Amigos 228</h2>
-                    <p style="text-align: center; font-size: 12px; color: #555; margin-top: 0;">General Roca, Río Negro - CUIT: 30-71234567-9</p>
-                    <h3 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-top: 20px; text-transform: uppercase;">Padrón Oficial de Socios y Comisión Directiva</h3>
-                    <p style="font-size: 11px; margin-bottom: 15px;">Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}</p>
-                    
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; font-family: monospace;">
-                        <thead>
-                            <tr style="background: #1d4ed8; color: white; text-align: left;">
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">DNI / CUIL</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Apellido y Nombre</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Rol Institucional</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Contacto</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Estado Cuota</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${dbUsers.filter(u => u.role !== 'Inactivo' && u.role !== 'Pendiente').map(u => {
-                                let nombreCompleto = `${u.nombre} ${u.apellido}`;
-                                let res = calcularEstadoSocio(nombreCompleto);
-                                return `
-                                    <tr>
-                                        <td style="padding: 6px; border: 1px solid #cbd5e1;">${u.dni}</td>
-                                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold;">${nombreCompleto}</td>
-                                        <td style="padding: 6px; border: 1px solid #cbd5e1;">${u.role}</td>
-                                        <td style="padding: 6px; border: 1px solid #cbd5e1;">${u.telefono}</td>
-                                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold; color: ${res.estado === 'AL DÍA' ? 'green' : 'red'};">${res.estado}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 11px;">
-                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Presidente</div>
-                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Secretario</div>
-                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Tesorero</div>
-                    </div>
-                </div>
-            `;
-
-            let w = window.open('', '_blank');
-            w.document.write('<html><head><title>Padron Oficial - Asociación 228</title></head><body>' + padronHtml + '</body></html>');
-            w.document.close();
-            w.focus();
-            setTimeout(() => { w.print(); w.close(); }, 500);
-        }
-
-        function descargarPdfLibroCaja() {
-            if (!verificarPermisoComision()) return;
-
-            let mesSelect = document.getElementById('selectMesArqueo');
-            let mesVal = mesSelect ? mesSelect.value : 'todos';
-            let nombreMes = mesVal === 'todos' ? 'EJERCICIO COMPLETO 2026' : `MES DE ${MESES_ANIO[parseInt(mesVal)].toUpperCase()} 2026`;
-
-            let movsFiltrados = dbMovimientos;
-            if (mesVal !== 'todos') {
-                let mIdx = parseInt(mesVal);
-                movsFiltrados = dbMovimientos.filter(m => {
-                    if (!m.fecha) return false;
-                    let partes = m.fecha.split('-');
-                    if (partes.length < 2) return false;
-                    return (parseInt(partes[1]) - 1) === mIdx;
-                });
-            }
-
-            let ingresos = movsFiltrados.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
-            let egresos = movsFiltrados.filter(m => m.tipo === 'egreso').reduce((a, b) => a + b.monto, 0);
-            let neto = ingresos - egresos;
-            let finalSaldo = saldoInicialGlobal + neto;
-
-            let libroHtml = `
-                <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
-                    <h2 style="text-align: center; text-transform: uppercase; margin-bottom: 5px;">Asociación Civil Padres y Amigos 228</h2>
-                    <p style="text-align: center; font-size: 12px; color: #555; margin-top: 0;">General Roca, Río Negro - CUIT: 30-71234567-9</p>
-                    <h3 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-top: 20px; text-transform: uppercase;">Libro de Caja Oficial - ${nombreMes}</h3>
-                    
-                    <div style="margin-bottom: 15px; font-size: 12px; font-family: monospace; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1;">
-                        <p><strong>Saldo Inicial Arrastrado:</strong> $${saldoInicialGlobal.toLocaleString('es-AR')}</p>
-                        <p><strong>Total Ingresos:</strong> $${ingresos.toLocaleString('es-AR')}</p>
-                        <p><strong>Total Egresos:</strong> $${egresos.toLocaleString('es-AR')}</p>
-                        <p><strong>Saldo Final en Caja:</strong> $${finalSaldo.toLocaleString('es-AR')}</p>
-                    </div>
-
-                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; font-family: monospace;">
-                        <thead>
-                            <tr style="background: #1d4ed8; color: white; text-align: left;">
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Fecha</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Categoría</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Concepto / Detalle</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Ingreso ($)</th>
-                                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Egreso ($)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${movsFiltrados.map(m => `
-                                <tr>
-                                    <td style="padding: 6px; border: 1px solid #cbd5e1;">${m.fecha}</td>
-                                    <td style="padding: 6px; border: 1px solid #cbd5e1;">${m.categoria}</td>
-                                    <td style="padding: 6px; border: 1px solid #cbd5e1;">${m.concepto}</td>
-                                    <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: green; font-weight: bold;">${m.tipo === 'ingreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
-                                    <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: red; font-weight: bold;">${m.tipo === 'egreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-
-                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 11px;">
-                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Tesorero</div>
-                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Revisor de Cuentas</div>
-                    </div>
-                </div>
-            `;
-
-            let w = window.open('', '_blank');
-            w.document.write('<html><head><title>Libro de Caja - Asociación 228</title></head><body>' + libroHtml + '</body></html>');
-            w.document.close();
-            w.focus();
-            setTimeout(() => { w.print(); w.close(); }, 500);
-        }
-    </script>
 </body>
 </html>
-
