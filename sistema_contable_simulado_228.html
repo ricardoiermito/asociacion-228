@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Contable - Asociación Civil Padres y Amigos 228</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK (v9 Compat para HTML estático simple) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace']
+                    },
+                    colors: {
+                        appBlue: '#1d4ed8',
+                        appYellow: '#eab308',
+                        appRed: '#dc2626',
+                        appGreen: '#16a34a',
+                        appOrange: '#f97316',
+                        appViolet: '#c084fc',
+                        appVioletDark: '#7e22ce'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+    <!-- LOGIN / REGISTRO / RECUPERAR CONTRASEÑA -->
+    <div id="authContainer" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-300 my-8">
+            <div class="bg-appBlue p-6 text-white text-center border-b border-blue-800">
+                <div class="w-12 h-12 bg-appYellow text-slate-900 rounded-lg flex items-center justify-center font-bold text-xl mx-auto mb-3 shadow-lg">
+                    228
+                </div>
+                <h1 class="text-lg font-bold">Asociación Civil Padres y Amigos 228</h1>
+                <p class="text-xs text-blue-100 mt-1">Gestión Contable, Secretaría y Tesorería</p>
+            </div>
+
+            <!-- FORMULARIO 1: INGRESO (LOGIN) -->
+            <form id="formLogin" onsubmit="handleLogin(event)" class="p-6 space-y-4">
+                <div id="loginError" class="hidden p-3 bg-red-100 border border-red-300 text-red-700 text-xs rounded-lg font-medium text-center"></div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-envelope text-xs"></i></span>
+                        <input type="email" id="loginEmail" class="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-appBlue font-mono" placeholder="ejemplo@correo.com" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Contraseña</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock text-xs"></i></span>
+                        <input type="password" id="loginPassword" class="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-appBlue font-mono" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="button" onclick="showAuthScreen('forgot')" class="text-xs text-appBlue font-bold hover:underline">¿Olvidaste tu contraseña?</button>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors uppercase tracking-wider">
+                    <i class="fa-solid fa-right-to-bracket mr-1"></i> Ingresar al Sistema
+                </button>
+
+                <div class="pt-4 border-t border-slate-200 text-center">
+                    <p class="text-xs text-slate-600">¿No tenés una cuenta?</p>
+                    <button type="button" onclick="showAuthScreen('register')" class="mt-1 font-bold text-xs text-appGreen hover:underline">Solicitar Registro de Socio</button>
+                </div>
+            </form>
+
+            <!-- FORMULARIO 2: REGISTRO DE NUEVO USUARIO -->
+            <form id="formRegister" onsubmit="handleRegister(event)" class="p-6 space-y-3 hidden">
+                <h3 class="text-sm font-bold text-slate-800 uppercase border-b border-slate-200 pb-2">Registro de Solicitante</h3>
+                <div id="registerError" class="hidden p-3 bg-red-100 border border-red-300 text-red-700 text-xs rounded-lg font-medium"></div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Nombre</label>
+                        <input type="text" id="regNombre" class="w-full p-2 border border-slate-300 rounded-lg text-xs" placeholder="Juan" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Apellido</label>
+                        <input type="text" id="regApellido" class="w-full p-2 border border-slate-300 rounded-lg text-xs" placeholder="Pérez" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">DNI</label>
+                        <input type="text" id="regDni" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="30.123.456" required>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">CUIL</label>
+                        <input type="text" id="regCuil" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="20-30123456-9" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Dirección</label>
+                    <input type="text" id="regDireccion" class="w-full p-2 border border-slate-300 rounded-lg text-xs" placeholder="Calle Falsa 123, General Roca" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Teléfono</label>
+                    <input type="text" id="regTelefono" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="2984-123456" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                    <input type="email" id="regEmail" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="socio@correo.com" required>
+                </div>
+
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-700 uppercase mb-1">Contraseña</label>
+                    <input type="password" id="regPassword" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors uppercase tracking-wider mt-2">
+                    Enviar Solicitud de Registro
+                </button>
+
+                <div class="pt-3 border-t border-slate-200 text-center">
+                    <button type="button" onclick="showAuthScreen('login')" class="text-xs font-bold text-slate-600 hover:underline">&larr; Volver a Ingresar</button>
+                </div>
+            </form>
+
+            <!-- FORMULARIO 3: RECUPERAR CONTRASEÑA -->
+            <form id="formForgot" onsubmit="handleForgotPassword(event)" class="p-6 space-y-4 hidden">
+                <h3 class="text-sm font-bold text-slate-800 uppercase border-b border-slate-200 pb-2">Recuperar Contraseña</h3>
+                <p class="text-xs text-slate-600">Ingresá tu correo electrónico registrado y te enviaremos un enlace de restablecimiento.</p>
+
+                <div id="forgotMsg" class="hidden p-3 bg-blue-100 border border-blue-300 text-blue-800 text-xs rounded-lg font-medium"></div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Correo Electrónico</label>
+                    <input type="email" id="forgotEmail" class="w-full p-2 border border-slate-300 rounded-lg text-xs font-mono" placeholder="tu_mail@correo.com" required>
+                </div>
+
+                <button type="submit" class="w-full py-2.5 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow-md transition-colors uppercase tracking-wider">
+                    Enviar Link de Recuperación
+                </button>
+
+                <div class="pt-3 border-t border-slate-200 text-center">
+                    <button type="button" onclick="showAuthScreen('login')" class="text-xs font-bold text-slate-600 hover:underline">&larr; Volver al Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN APP SCREEN -->
+    <div id="appScreen" class="flex-1 flex flex-col hidden">
+        <!-- TOP NAVBAR -->
+        <header class="bg-slate-900 text-white border-b border-slate-700 px-4 py-2.5 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-3">
+                <span class="font-bold bg-appYellow text-slate-900 px-2.5 py-1 rounded text-[11px] shadow">SOCIEDAD 228</span>
+                <span class="hidden sm:inline text-slate-300 border-l border-slate-700 pl-3">Asociación Civil sin Fines de Lucro</span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-800 px-3 py-1 rounded border border-slate-700">
+                    <i class="fa-solid fa-circle-user text-appGreen"></i>
+                    <div>
+                        <span id="displayUsername" class="font-bold text-white uppercase">---</span>
+                        <span id="displayRoleBadge" class="ml-1 text-[10px] px-1.5 py-0.5 bg-slate-700 rounded text-appYellow font-bold">---</span>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="bg-appRed hover:bg-red-700 px-2.5 py-1 rounded text-white font-bold transition-colors">
+                    <i class="fa-solid fa-power-off mr-1"></i> Salir
+                </button>
+            </div>
+        </header>
+
+        <!-- BODY WRAPPER -->
+        <div class="flex-1 flex flex-col md:flex-row min-h-0">
+            <!-- SIDEBAR NAVIGATION -->
+            <nav class="w-full md:w-64 bg-slate-800 text-slate-200 p-2 flex flex-row md:flex-col gap-1 border-r border-slate-700 font-medium text-xs overflow-x-auto">
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn active flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-chart-pie w-4 text-appYellow"></i> Dashboard General
+                </button>
+                <button onclick="switchTab('caja')" id="nav-caja" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-book w-4 text-appOrange"></i> Libro de Caja
+                </button>
+                <button onclick="switchTab('cuotas')" id="nav-cuotas" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-users w-4 text-appGreen"></i> Padrón y Cuotas ($1.000)
+                </button>
+                <button onclick="switchTab('secretaria')" id="nav-secretaria" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-folder-open w-4 text-appViolet"></i> Secretaría y Actas
+                </button>
+                <button onclick="switchTab('usuarios')" id="nav-usuarios" class="nav-btn hidden-socio flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-user-shield w-4 text-appRed"></i> Panel Altas/Bajas Usu.
+                </button>
+                <button onclick="switchTab('arqueo')" id="nav-arqueo" class="nav-btn flex items-center gap-2.5 px-3 py-2.5 rounded hover:bg-slate-700 text-left w-full transition-colors">
+                    <i class="fa-solid fa-file-signature w-4 text-appBlue"></i> Arqueo y Balances
+                </button>
+            </nav>
+
+            <!-- MAIN CONTENT AREA -->
+            <main class="flex-1 p-4 md:p-6 bg-slate-100 overflow-y-auto min-w-0">
+
+                <!-- TAB 1: DASHBOARD -->
+                <div id="tab-dashboard" class="tab-pane space-y-6">
+                    <div class="flex flex-wrap justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 gap-3">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Estado Financiero y Operativo</h2>
+                            <p class="text-xs text-slate-500">Base de datos en la nube (Firebase Realtime)</p>
+                        </div>
+                        <button onclick="openMovimientoModal()" class="hidden-socio px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                            <i class="fa-solid fa-plus"></i> Registrar Movimiento
+                        </button>
+                    </div>
+
+                    <!-- METRICS GRID -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appBlue">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Saldo Actual en Caja</p>
+                            <p id="dashSaldo" class="text-2xl font-bold font-mono text-slate-900 mt-1">$0,00</p>
+                            <span class="text-[11px] text-appBlue font-semibold"><i class="fa-solid fa-vault mr-1"></i> Efectivo Disponible</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appGreen">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Total Ingresos</p>
+                            <p id="dashIngresos" class="text-2xl font-bold font-mono text-appGreen mt-1">$0,00</p>
+                            <span class="text-[11px] text-slate-500">Cuotas ($1.000) + Aportes</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appRed">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Total Egresos</p>
+                            <p id="dashEgresos" class="text-2xl font-bold font-mono text-appRed mt-1">$0,00</p>
+                            <span class="text-[11px] text-slate-500">Fijos y Variables</span>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-appYellow">
+                            <p class="text-xs font-bold text-slate-500 uppercase">Socios al Día / Total</p>
+                            <p id="dashSociosCount" class="text-2xl font-bold font-mono text-slate-900 mt-1">0 / 0</p>
+                            <span class="text-[11px] text-slate-500">Padrón Aprobado</span>
+                        </div>
+                    </div>
+
+                    <!-- RECENT MOVEMENTS -->
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-3.5 bg-slate-50 border-b border-slate-200 font-bold text-xs text-slate-700 flex justify-between items-center">
+                            <span><i class="fa-solid fa-list-check mr-1.5 text-appOrange"></i> ÚLTIMOS MOVIMIENTOS CONTABLES</span>
+                            <button onclick="switchTab('caja')" class="text-appBlue hover:underline text-[11px]">Ver Libro Completo &rarr;</button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead class="bg-slate-100 border-b border-slate-200 text-slate-600 uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">Fecha</th>
+                                        <th class="p-3">Categoría</th>
+                                        <th class="p-3">Concepto / Detalle</th>
+                                        <th class="p-3">Tipo</th>
+                                        <th class="p-3 text-right">Monto</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashRecentTable" class="divide-y divide-slate-100">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: LIBRO DE CAJA -->
+                <div id="tab-caja" class="tab-pane hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap gap-3 justify-between items-center">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Libro de Caja y Tesorería</h2>
+                            <p class="text-xs text-slate-500">Registro detallado de ingresos y egresos</p>
+                        </div>
+                        <button onclick="openMovimientoModal()" class="hidden-socio px-3.5 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                            <i class="fa-solid fa-plus"></i> Nuevo Asiento Contable
+                        </button>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-mono">
+                                <thead class="bg-slate-900 text-white uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">N°</th>
+                                        <th class="p-3">Fecha</th>
+                                        <th class="p-3">Categoría</th>
+                                        <th class="p-3">Concepto / Detalle</th>
+                                        <th class="p-3 text-right">Ingreso</th>
+                                        <th class="p-3 text-right">Egreso</th>
+                                        <th class="p-3 text-center action-col">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cajaTableBody" class="divide-y divide-slate-100">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 3: PADRÓN Y CUOTAS -->
+                <div id="tab-cuotas" class="tab-pane hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                        <div>
+                            <h2 class="text-base font-bold text-slate-900">Gestión de Socios y Cobro de Cuotas</h2>
+                            <p class="text-xs text-slate-500">Cuota Social Fija: <span class="font-bold text-slate-900">$1.000,00</span> (Admite meses adelantados)</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-900 text-white uppercase font-sans">
+                                    <tr>
+                                        <th class="p-3">DNI / CUIL</th>
+                                        <th class="p-3">Nombre y Apellido</th>
+                                        <th class="p-3">Teléfono / Dirección</th>
+                                        <th class="p-3">Estado Cuota</th>
+                                        <th class="p-3 text-center">Acción Cobro ($1.000)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sociosTableBody" class="divide-y divide-slate-100 font-mono">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 4: SECRETARÍA Y ACTAS -->
+                <div id="tab-secretaria" class="tab-pane hidden space-y-6">
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-200 pb-3">
+                            <div>
+                                <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-id-card text-appVioletDark mr-2"></i>Datos Institucionales y Comisión Directiva</h2>
+                                <p class="text-xs text-slate-500">Modificable previa validación (Tesorero + Presidente + 1 Vocal)</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
+                            <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5">
+                                <p class="text-slate-500 uppercase font-sans font-bold">Institución:</p>
+                                <p id="instNombre" class="font-bold text-slate-900 text-sm">Asociación Civil Padres y Amigos 228</p>
+                                <p class="text-slate-600">CUIT: <span id="instCuit">30-71234567-9</span></p>
+                            </div>
+                            <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-1.5 font-sans">
+                                <p class="text-slate-500 uppercase font-bold">Comisión Directiva:</p>
+                                <p>Presidente: <span id="cdPresidente" class="font-bold text-slate-800">Ana Gómez</span></p>
+                                <p>Tesorero: <span id="cdTesorero" class="font-bold text-slate-800">Carlos Ruiz</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: PANEL DE ALTAS Y BAJAS DE USUARIOS (SECRETARÍA/TESORERO) -->
+                <div id="tab-usuarios" class="tab-pane hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                        <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-user-shield text-appRed mr-2"></i>Control de Admisión de Usuarios y Roles</h2>
+                        <p class="text-xs text-slate-500">Aprobar registro de nuevos solicitantes y asignar permisos de acceso</p>
+                    </div>
+
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs font-sans">
+                                <thead class="bg-slate-900 text-white uppercase">
+                                    <tr>
+                                        <th class="p-3">Solicitante / Mail</th>
+                                        <th class="p-3">DNI / CUIL</th>
+                                        <th class="p-3">Contacto</th>
+                                        <th class="p-3">Estado Actual</th>
+                                        <th class="p-3">Asignar Rol</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usuariosAdminTable" class="divide-y divide-slate-100">
+                                    <!-- Dynamic -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 6: ARQUEO Y BALANCES -->
+                <div id="tab-arqueo" class="tab-pane hidden space-y-6">
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+                        <div class="border-b border-slate-200 pb-4">
+                            <h2 class="text-base font-bold text-slate-900">Arqueo y Cierre de Cuentas</h2>
+                            <p class="text-xs text-slate-500">Presentación formal para Asamblea y ARCA</p>
+                        </div>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- MODAL NUEVO MOVIMIENTO -->
+    <div id="modalMovimiento" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
+            <div class="bg-slate-900 text-white px-4 py-3.5 flex justify-between items-center text-xs font-bold">
+                <span>NUEVO ASIENTO CONTABLE</span>
+                <button onclick="closeMovimientoModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
+            </div>
+            <form onsubmit="saveMovimiento(event)" class="p-4 space-y-3 text-xs">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Tipo</label>
+                        <select id="movTipo" class="w-full border border-slate-300 rounded-lg p-2 font-bold" required>
+                            <option value="ingreso">INGRESO (+)</option>
+                            <option value="egreso">EGRESO (-)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Monto ($)</label>
+                        <input type="number" id="movMonto" step="0.01" min="1" placeholder="0.00" class="w-full border border-slate-300 rounded-lg p-2 font-mono font-bold" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Categoría</label>
+                    <select id="movCategoria" class="w-full border border-slate-300 rounded-lg p-2" required>
+                        <option value="Cuota Social">Cuota Social ($1.000)</option>
+                        <option value="Luz">Servicio Luz</option>
+                        <option value="Gas">Servicio Gas</option>
+                        <option value="Agua">Servicio Agua</option>
+                        <option value="Municipio">Municipio / Tasas</option>
+                        <option value="ARCA">ARCA (Impuestos)</option>
+                        <option value="Eventos">Eventos / Beneficios</option>
+                        <option value="Mantenimiento">Mantenimiento</option>
+                        <option value="Limpieza">Artículos de Limpieza</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Concepto / Detalle</label>
+                    <input type="text" id="movConcepto" class="w-full border border-slate-300 rounded-lg p-2" required>
+                </div>
+                <div class="pt-3 border-t border-slate-200 flex justify-end gap-2">
+                    <button type="button" onclick="closeMovimientoModal()" class="px-3.5 py-2 bg-slate-200 text-slate-700 rounded-lg font-bold">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white rounded-lg font-bold">Guardar en Firebase</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOGIC & FIREBASE SCRIPT -->
+    <script>
+        // -------------------------------------------------------------
+        // CONFIGURACIÓN DE TU BASE DE DATOS EN FIREBASE
+        // (Reemplazar con los datos que te da la consola de Firebase)
+        // -------------------------------------------------------------
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8Ditn44VNbX_guBhatYKD4ERNWyJsWQo",
+            authDomain: "asociacion-228.firebaseapp.com",
+            projectId: "asociacion-228",
+            storageBucket: "asociacion-228.firebasestorage.app",
+            messagingSenderId: "997844125374",
+            appId: "1:997844125374:web:2e3a98273c5aa43e3900ef",
+            measurementId: "G-PH8WFBF1RE"
+        };
+
+        // Inicializar Firebase (si no se configuran claves reales, opera en modo demostración)
+        let isFirebaseReady = false;
+        try {
+            if (firebaseConfig.apiKey !== "TU_API_KEY_AQUI") {
+                firebase.initializeApp(firebaseConfig);
+                isFirebaseReady = true;
+            }
+        } catch(e) { console.log("Firebase no configurado aún, corriendo en modo estático."); }
+
+        // ESTADO GLOBAL
+        let currentUser = null;
+        let dbUsers = [];
+        let dbMovimientos = [];
+
+        // NAVEGACIÓN PANTALLAS DE AUTENTICACIÓN
+        function showAuthScreen(screen) {
+            document.getElementById('formLogin').classList.add('hidden');
+            document.getElementById('formRegister').classList.add('hidden');
+            document.getElementById('formForgot').classList.add('hidden');
+
+            if (screen === 'login') document.getElementById('formLogin').classList.remove('hidden');
+            if (screen === 'register') document.getElementById('formRegister').classList.remove('hidden');
+            if (screen === 'forgot') document.getElementById('formForgot').classList.remove('hidden');
+        }
+
+        // 1. INGRESO (LOGIN)
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+
+            if (isFirebaseReady) {
+                firebase.auth().signInWithEmailAndPassword(email, pass)
+                    .then(userCred => {
+                        loadUserProfile(userCred.user.uid);
+                    })
+                    .catch(err => {
+                        showLoginError("Error de autenticación: " + err.message);
+                    });
+            } else {
+                // MODO DEMO DIRECTO PARA PRUEBA
+                currentUser = { email, role: 'Tesorero', name: 'Tesorero Administrador', canEdit: true };
+                document.getElementById('authContainer').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                document.getElementById('displayUsername').textContent = email;
+                document.getElementById('displayRoleBadge').textContent = 'Tesorero (Demo)';
+                renderAll();
+            }
+        }
+
+        function showLoginError(msg) {
+            const errDiv = document.getElementById('loginError');
+            errDiv.textContent = msg;
+            errDiv.classList.remove('hidden');
+        }
+
+        // 2. REGISTRO DE NUEVO SOLICITANTE
+        function handleRegister(e) {
+            e.preventDefault();
+            const userData = {
+                nombre: document.getElementById('regNombre').value,
+                apellido: document.getElementById('regApellido').value,
+                dni: document.getElementById('regDni').value,
+                cuil: document.getElementById('regCuil').value,
+                direccion: document.getElementById('regDireccion').value,
+                telefono: document.getElementById('regTelefono').value,
+                email: document.getElementById('regEmail').value.trim(),
+                role: 'Pendiente', // Inicia pendiente de aprobación por el Secretario
+                estado: 'Pendiente de Alta',
+                fechaRegistro: new Date().toISOString().split('T')[0]
+            };
+
+            const password = document.getElementById('regPassword').value;
+
+            if (isFirebaseReady) {
+                firebase.auth().createUserWithEmailAndPassword(userData.email, password)
+                    .then(userCred => {
+                        return firebase.firestore().collection('usuarios').doc(userCred.user.uid).set(userData);
+                    })
+                    .then(() => {
+                        alert("¡Solicitud enviada con éxito! El Secretario o Tesorero revisará sus datos para activar su cuenta.");
+                        showAuthScreen('login');
+                    })
+                    .catch(err => {
+                        document.getElementById('registerError').textContent = err.message;
+                        document.getElementById('registerError').classList.remove('hidden');
+                    });
+            } else {
+                dbUsers.push(userData);
+                alert("MODO PRUEBA: Solicitud registrada exitosamente en el panel del Secretario.");
+                showAuthScreen('login');
+            }
+        }
+
+        // 3. RECUPERAR CONTRASEÑA POR EMAIL
+        function handleForgotPassword(e) {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value.trim();
+
+            if (isFirebaseReady) {
+                firebase.auth().sendPasswordResetEmail(email)
+                    .then(() => {
+                        const msg = document.getElementById('forgotMsg');
+                        msg.textContent = "Te hemos enviado un correo electrónico con las instrucciones para restablecer tu contraseña.";
+                        msg.classList.remove('hidden');
+                    })
+                    .catch(err => { alert("Error: " + err.message); });
+            } else {
+                const msg = document.getElementById('forgotMsg');
+                msg.textContent = "MODO PRUEBA: Se ha simulado el envío del link de recuperación a: " + email;
+                msg.classList.remove('hidden');
+            }
+        }
+
+        function handleLogout() {
+            if (isFirebaseReady) firebase.auth().signOut();
+            document.getElementById('authContainer').classList.remove('hidden');
+            document.getElementById('appScreen').classList.add('hidden');
+        }
+
+        // Cargar perfil desde Firestore
+        function loadUserProfile(uid) {
+            firebase.firestore().collection('usuarios').doc(uid).get().then(doc => {
+                if (doc.exists) {
+                    currentUser = doc.data();
+                    if (currentUser.role === 'Pendiente') {
+                        alert("Tu cuenta aún está pendiente de aprobación por la Comisión Directiva.");
+                        firebase.auth().signOut();
+                        return;
+                    }
+                    document.getElementById('authContainer').classList.add('hidden');
+                    document.getElementById('appScreen').classList.remove('hidden');
+                    document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+                    document.getElementById('displayRoleBadge').textContent = currentUser.role;
+                    renderAll();
+                }
+            });
+        }
+
+        // NAVEGACIÓN DE PESTAÑAS
+        function switchTab(tabKey) {
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active', 'bg-slate-700', 'text-white'));
+
+            document.getElementById(`tab-${tabKey}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabKey}`).classList.add('active', 'bg-slate-700', 'text-white');
+        }
+
+        function renderAll() {
+            renderUsuariosAdmin();
+            renderSocios();
+            renderCaja();
+        }
+
+        // PANEL DE ALTAS Y BAJAS (SECRETARÍA)
+        function renderUsuariosAdmin() {
+            const body = document.getElementById('usuariosAdminTable');
+            body.innerHTML = dbUsers.map((u, index) => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
+                    <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
+                    <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion}</span></td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${u.role === 'Pendiente' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'}">
+                            ${u.role.toUpperCase()}
+                        </span>
+                    </td>
+                    <td class="p-3">
+                        <select onchange="cambiarRolUsuario(${index}, this.value)" class="border border-slate-300 rounded p-1 text-xs">
+                            <option value="Socio" ${u.role === 'Socio' ? 'selected' : ''}>Socio</option>
+                            <option value="Tesorero" ${u.role === 'Tesorero' ? 'selected' : ''}>Tesorero</option>
+                            <option value="Presidente" ${u.role === 'Presidente' ? 'selected' : ''}>Presidente</option>
+                            <option value="Revisor de Cuentas" ${u.role === 'Revisor de Cuentas' ? 'selected' : ''}>Revisor de Cuentas</option>
+                        </select>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="darDeBajaUsuario(${index})" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded text-[10px]">
+                            Dar de Baja
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function cambiarRolUsuario(index, nuevoRol) {
+            dbUsers[index].role = nuevoRol;
+            alert(`Rol de ${dbUsers[index].nombre} actualizado a: ${nuevoRol}`);
+            renderAll();
+        }
+
+        function darDeBajaUsuario(index) {
+            if (confirm(`¿Seguro que deseas dar de baja a ${dbUsers[index].nombre}?`)) {
+                dbUsers.splice(index, 1);
+                renderAll();
+            }
+        }
+
+        function renderSocios() {
+            const body = document.getElementById('sociosTableBody');
+            body.innerHTML = dbUsers.filter(u => u.role === 'Socio').map(s => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-600">${s.dni}</td>
+                    <td class="p-3 font-bold text-slate-900 font-sans">${s.nombre} ${s.apellido}</td>
+                    <td class="p-3 text-slate-600 font-sans">${s.telefono}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">AL DÍA</span></td>
+                    <td class="p-3 text-center font-sans">
+                        <button onclick="cobrarCuota('${s.nombre}')" class="px-2.5 py-1 bg-appGreen hover:bg-green-700 text-white rounded font-bold text-[11px]">
+                            Cobrar Cuota ($1.000)
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function cobrarCuota(nombre) {
+            let meses = prompt(`¿Cuántos meses desea abonar ${nombre}? (Valor cuota: $1.000)`, "1");
+            if (!meses) return;
+            let total = parseInt(meses) * 1000;
+            dbMovimientos.unshift({
+                id: Date.now(),
+                fecha: new Date().toISOString().split('T')[0],
+                tipo: 'ingreso',
+                categoria: 'Cuota Social',
+                concepto: `Cobro cuota social (${meses} mes/es) - ${nombre}`,
+                monto: total
+            });
+            renderAll();
+            alert(`Cobro de $${total} registrado.`);
+        }
+
+        function renderCaja() {
+            const body = document.getElementById('cajaTableBody');
+            body.innerHTML = dbMovimientos.map(m => `
+                <tr class="hover:bg-slate-50">
+                    <td class="p-3 font-bold text-slate-400">#${m.id}</td>
+                    <td class="p-3 text-slate-600">${m.fecha}</td>
+                    <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 border border-slate-300 rounded text-[10px] text-slate-700">${m.categoria}</span></td>
+                    <td class="p-3 font-bold text-slate-800 font-sans">${m.concepto}</td>
+                    <td class="p-3 text-right font-bold text-green-600">${m.tipo === 'ingreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
+                    <td class="p-3 text-right font-bold text-red-600">${m.tipo === 'egreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
+                    <td class="p-3 text-center action-col">
+                        <button onclick="deleteMovimiento(${m.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openMovimientoModal() { document.getElementById('modalMovimiento').classList.remove('hidden'); }
+        function closeMovimientoModal() { document.getElementById('modalMovimiento').classList.add('hidden'); }
+
+        function saveMovimiento(e) {
+            e.preventDefault();
+            dbMovimientos.unshift({
+                id: Date.now(),
+                fecha: new Date().toISOString().split('T')[0],
+                tipo: document.getElementById('movTipo').value,
+                categoria: document.getElementById('movCategoria').value,
+                concepto: document.getElementById('movConcepto').value,
+                monto: parseFloat(document.getElementById('movMonto').value)
+            });
+            closeMovimientoModal();
+            renderAll();
+        }
+
+        function deleteMovimiento(id) {
+            if (confirm("¿Eliminar este registro contable?")) {
+                dbMovimientos = dbMovimientos.filter(m => m.id !== id);
+                renderAll();
+            }
+        }
+    </script>
+</body>
+</html>
