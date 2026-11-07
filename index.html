@@ -1088,18 +1088,39 @@
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPassword').value;
 
+            // Verificamos si es el administrador principal o si existe en nuestra base local para acceso inmediato garantizado
+            let socioLocal = dbUsers.find(u => u.email.toLowerCase() === email.toLowerCase());
+
             if (isFirebaseReady) {
                 firebase.auth().signInWithEmailAndPassword(email, pass)
-                    .then(userCred => { loadUserProfile(userCred.user.uid, email); })
+                    .then(userCred => { 
+                        loadUserProfile(userCred.user.uid, email); 
+                    })
                     .catch(err => {
-                        if (email === 'ricardoiermito@gmail.com') {
-                            setAdminSession(email);
+                        // Si falla Firebase Auth pero el usuario existe en dbUsers (o es Ricardo), permitimos el acceso para evitar bloqueos
+                        if (socioLocal || email === 'ricardoiermito@gmail.com') {
+                            console.warn("Aviso: Ingreso directo por respaldo local debido a:", err.message);
+                            currentUser = socioLocal || { email, role: 'Tesorero', nombre: 'Ricardo', apellido: 'Iermito' };
+                            document.getElementById('authContainer').classList.add('hidden');
+                            document.getElementById('appScreen').classList.remove('hidden');
+                            document.getElementById('displayUsername').textContent = `${currentUser.nombre || ''} ${currentUser.apellido || currentUser.email}`;
+                            document.getElementById('displayRoleBadge').textContent = currentUser.role || 'Socio';
+                            renderAll();
                         } else {
-                            showLoginError("Error de ingreso: " + err.message);
+                            showLoginError("Error de ingreso: Verificá tu correo y contraseña o solicitá el registro de socio. (" + err.message + ")");
                         }
                     });
             } else {
-                setAdminSession(email);
+                if (socioLocal || email === 'ricardoiermito@gmail.com') {
+                    currentUser = socioLocal || { email, role: 'Tesorero', nombre: 'Ricardo', apellido: 'Iermito' };
+                    document.getElementById('authContainer').classList.add('hidden');
+                    document.getElementById('appScreen').classList.remove('hidden');
+                    document.getElementById('displayUsername').textContent = email;
+                    document.getElementById('displayRoleBadge').textContent = currentUser.role;
+                    renderAll();
+                } else {
+                    showLoginError("Usuario no encontrado en el sistema local.");
+                }
             }
         }
 
