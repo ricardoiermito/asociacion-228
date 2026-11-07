@@ -529,7 +529,7 @@
                                 <h2 class="text-base font-bold text-slate-900">Arqueo de Caja y Balances Oficiales</h2>
                                 <p class="text-xs text-slate-500">Generación de informes contables normalizados para Asamblea y ARCA</p>
                             </div>
-                            <div class="flex items-center gap-2 no-print">
+                            <div class="flex flex-wrap items-center gap-2 no-print">
                                 <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-200 text-xs">
                                     <label class="font-bold text-slate-700">Mes:</label>
                                     <select id="selectMesArqueo" onchange="renderArqueo()" class="bg-white border border-slate-300 rounded p-1 font-bold">
@@ -548,8 +548,14 @@
                                         <option value="11">Diciembre</option>
                                     </select>
                                 </div>
-                                <button onclick="window.print()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
-                                    <i class="fa-solid fa-file-pdf"></i> Imprimir PDF Mensual
+                                <button onclick="window.print()" class="px-3.5 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors">
+                                    <i class="fa-solid fa-file-pdf"></i> Imprimir Balance PDF
+                                </button>
+                                <button onclick="descargarPdfPadron()" class="only-comision px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors" title="Descargar Padrón Oficial">
+                                    <i class="fa-solid fa-users-rectangle"></i> PDF Padrón
+                                </button>
+                                <button onclick="descargarPdfLibroCaja()" class="only-comision px-3.5 py-2 bg-appOrange hover:bg-orange-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-colors" title="Descargar Libro de Caja">
+                                    <i class="fa-solid fa-book-open"></i> PDF Libro Caja
                                 </button>
                             </div>
                         </div>
@@ -1283,7 +1289,10 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.only-comision').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
+            } else {
+                document.querySelectorAll('.only-comision').forEach(el => el.classList.remove('hidden'));
             } else if (rol === 'Revisor de Cuentas') {
                 // REVISOR DE CUENTAS: LECTURA TOTAL Y DESCARGAS
                 if (navDashboard) navDashboard.classList.remove('hidden');
@@ -1942,6 +1951,146 @@
                 alert("Asiento eliminado correctamente.");
             }
         }
-    </script>
+    
+        function verificarPermisoComision() {
+            if (!currentUser) return false;
+            let rol = currentUser.role || 'Socio';
+            const rolesComision = ['Presidente', 'Tesorero', 'Secretario', 'Revisor de Cuentas', 'Vocal'];
+            if (!rolesComision.includes(rol)) {
+                alert("ACCESO DENEGADO: La descarga de informes y registros institucionales (Padrón y Libro de Caja) es una atribución exclusiva de la Comisión Directiva.");
+                return false;
+            }
+            return true;
+        }
+
+        function descargarPdfPadron() {
+            if (!verificarPermisoComision()) return;
+            
+            // Abrimos vista de impresión optimizada para Padrón
+            let originalContent = document.body.innerHTML;
+            
+            let padronHtml = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
+                    <h2 style="text-align: center; text-transform: uppercase; margin-bottom: 5px;">Asociación Civil Padres y Amigos 228</h2>
+                    <p style="text-align: center; font-size: 12px; color: #555; margin-top: 0;">General Roca, Río Negro - CUIT: 30-71234567-9</p>
+                    <h3 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-top: 20px; text-transform: uppercase;">Padrón Oficial de Socios y Comisión Directiva</h3>
+                    <p style="font-size: 11px; margin-bottom: 15px;">Fecha de emisión: ${new Date().toLocaleDateString('es-AR')}</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; font-family: monospace;">
+                        <thead>
+                            <tr style="background: #1d4ed8; color: white; text-align: left;">
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">DNI / CUIL</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Apellido y Nombre</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Rol Institucional</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Contacto</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Estado Cuota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${dbUsers.filter(u => u.role !== 'Inactivo' && u.role !== 'Pendiente').map(u => {
+                                let nombreCompleto = `${u.nombre} ${u.apellido}`;
+                                let res = calcularEstadoSocio(nombreCompleto);
+                                return `
+                                    <tr>
+                                        <td style="padding: 6px; border: 1px solid #cbd5e1;">${u.dni}</td>
+                                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold;">${nombreCompleto}</td>
+                                        <td style="padding: 6px; border: 1px solid #cbd5e1;">${u.role}</td>
+                                        <td style="padding: 6px; border: 1px solid #cbd5e1;">${u.telefono}</td>
+                                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-weight: bold; color: ${res.estado === 'AL DÍA' ? 'green' : 'red'};">${res.estado}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 11px;">
+                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Presidente</div>
+                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Secretario</div>
+                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Tesorero</div>
+                    </div>
+                </div>
+            `;
+
+            let w = window.open('', '_blank');
+            w.document.write('<html><head><title>Padron Oficial - Asociación 228</title></head><body>' + padronHtml + '</body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(() => { w.print(); w.close(); }, 500);
+        }
+
+        function descargarPdfLibroCaja() {
+            if (!verificarPermisoComision()) return;
+
+            let mesSelect = document.getElementById('selectMesArqueo');
+            let mesVal = mesSelect ? mesSelect.value : 'todos';
+            let nombreMes = mesVal === 'todos' ? 'EJERCICIO COMPLETO 2026' : `MES DE ${MESES_ANIO[parseInt(mesVal)].toUpperCase()} 2026`;
+
+            let movsFiltrados = dbMovimientos;
+            if (mesVal !== 'todos') {
+                let mIdx = parseInt(mesVal);
+                movsFiltrados = dbMovimientos.filter(m => {
+                    if (!m.fecha) return false;
+                    let partes = m.fecha.split('-');
+                    if (partes.length < 2) return false;
+                    return (parseInt(partes[1]) - 1) === mIdx;
+                });
+            }
+
+            let ingresos = movsFiltrados.filter(m => m.tipo === 'ingreso').reduce((a, b) => a + b.monto, 0);
+            let egresos = movsFiltrados.filter(m => m.tipo === 'egreso').reduce((a, b) => a + b.monto, 0);
+            let neto = ingresos - egresos;
+            let finalSaldo = saldoInicialGlobal + neto;
+
+            let libroHtml = `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #000;">
+                    <h2 style="text-align: center; text-transform: uppercase; margin-bottom: 5px;">Asociación Civil Padres y Amigos 228</h2>
+                    <p style="text-align: center; font-size: 12px; color: #555; margin-top: 0;">General Roca, Río Negro - CUIT: 30-71234567-9</p>
+                    <h3 style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-top: 20px; text-transform: uppercase;">Libro de Caja Oficial - ${nombreMes}</h3>
+                    
+                    <div style="margin-bottom: 15px; font-size: 12px; font-family: monospace; background: #f8fafc; padding: 10px; border: 1px solid #cbd5e1;">
+                        <p><strong>Saldo Inicial Arrastrado:</strong> $${saldoInicialGlobal.toLocaleString('es-AR')}</p>
+                        <p><strong>Total Ingresos:</strong> $${ingresos.toLocaleString('es-AR')}</p>
+                        <p><strong>Total Egresos:</strong> $${egresos.toLocaleString('es-AR')}</p>
+                        <p><strong>Saldo Final en Caja:</strong> $${finalSaldo.toLocaleString('es-AR')}</p>
+                    </div>
+
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11px; font-family: monospace;">
+                        <thead>
+                            <tr style="background: #1d4ed8; color: white; text-align: left;">
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Fecha</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Categoría</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Concepto / Detalle</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Ingreso ($)</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Egreso ($)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${movsFiltrados.map(m => `
+                                <tr>
+                                    <td style="padding: 6px; border: 1px solid #cbd5e1;">${m.fecha}</td>
+                                    <td style="padding: 6px; border: 1px solid #cbd5e1;">${m.categoria}</td>
+                                    <td style="padding: 6px; border: 1px solid #cbd5e1;">${m.concepto}</td>
+                                    <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: green; font-weight: bold;">${m.tipo === 'ingreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
+                                    <td style="padding: 6px; border: 1px solid #cbd5e1; text-align: right; color: red; font-weight: bold;">${m.tipo === 'egreso' ? '$' + m.monto.toLocaleString('es-AR') : '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 11px;">
+                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Tesorero</div>
+                        <div style="text-align: center; border-top: 1px solid #000; width: 200px; padding-top: 5px;">Firma Revisor de Cuentas</div>
+                    </div>
+                </div>
+            `;
+
+            let w = window.open('', '_blank');
+            w.document.write('<html><head><title>Libro de Caja - Asociación 228</title></head><body>' + libroHtml + '</body></html>');
+            w.document.close();
+            w.focus();
+            setTimeout(() => { w.print(); w.close(); }, 500);
+        }
+
+</script>
 </body>
 </html>
