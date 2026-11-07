@@ -521,7 +521,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 6: ARQUEO E INFORMES PDF -->
+                <!-- TAB 6: ARQUEO E INFORMES PDF (CON BOTONES DE DESCARGA Y PERMISOS COMISIÓN DIRECTIVA) -->
                 <div id="tab-arqueo" class="tab-pane hidden space-y-6">
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
                         <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-4 gap-3">
@@ -529,7 +529,7 @@
                                 <h2 class="text-base font-bold text-slate-900">Arqueo de Caja y Balances Oficiales</h2>
                                 <p class="text-xs text-slate-500">Generación de informes contables normalizados para Asamblea y ARCA</p>
                             </div>
-                            <div class="flex items-center gap-2 no-print">
+                            <div class="flex flex-wrap items-center gap-2 no-print">
                                 <div class="flex items-center gap-1 bg-slate-50 p-1.5 rounded border border-slate-200 text-xs">
                                     <label class="font-bold text-slate-700">Mes:</label>
                                     <select id="selectMesArqueo" onchange="renderArqueo()" class="bg-white border border-slate-300 rounded p-1 font-bold">
@@ -548,8 +548,18 @@
                                         <option value="11">Diciembre</option>
                                     </select>
                                 </div>
-                                <button onclick="window.print()" class="px-4 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                                <button onclick="window.print()" class="px-3.5 py-2 bg-appBlue hover:bg-blue-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
                                     <i class="fa-solid fa-file-pdf"></i> Imprimir PDF Mensual
+                                </button>
+                                
+                                <!-- NUEVO: Botón de descarga PDF del Padrón (Exclusivo Comisión Directiva) -->
+                                <button onclick="descargarPdfPadron()" class="px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                                    <i class="fa-solid fa-users-rectangle"></i> PDF Padrón
+                                </button>
+
+                                <!-- NUEVO: Botón de descarga PDF Libro de Caja (Exclusivo Comisión Directiva) -->
+                                <button onclick="descargarPdfLibroCaja()" class="px-3.5 py-2 bg-appOrange hover:bg-orange-600 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
+                                    <i class="fa-solid fa-book-bookmark"></i> PDF Libro de Caja
                                 </button>
                             </div>
                         </div>
@@ -929,6 +939,45 @@
         let valorCuotaSocial = 1000;
         const MESES_ANIO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
+        // ==========================================
+        // VALIDACIÓN DE PERMISOS PARA COMISIÓN DIRECTIVA
+        // ==========================================
+        function verificarPermisoComision() {
+            if (!currentUser) {
+                alert("ACCESO DENEGADO: Debe iniciar sesión.");
+                return false;
+            }
+            const rol = currentUser.role || 'Socio';
+            const rolesComision = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
+            
+            if (!rolesComision.includes(rol)) {
+                alert("ACCESO DENEGADO: Esta función de descarga de PDF está reservada exclusivamente para los miembros de la Comisión Directiva.");
+                return false;
+            }
+            return true;
+        }
+
+        // Descarga de PDF del Padrón
+        function descargarPdfPadron() {
+            if (!verificarPermisoComision()) return;
+            
+            // Cambiar título temporal para impresión limpia
+            document.getElementById('printTitle').textContent = "INFORME OFICIAL - PADRÓN DE SOCIOS Y COMISIÓN DIRECTIVA 2026";
+            window.print();
+        }
+
+        // Descarga de PDF del Libro de Caja
+        function descargarPdfLibroCaja() {
+            if (!verificarPermisoComision()) return;
+
+            let mesSelect = document.getElementById('selectMesArqueo');
+            let mesVal = mesSelect ? mesSelect.value : 'todos';
+            let nombreMes = mesVal === 'todos' ? 'EJERCICIO COMPLETO 2026' : `MES DE ${MESES_ANIO[parseInt(mesVal)].toUpperCase()} 2026`;
+
+            document.getElementById('printTitle').textContent = `INFORME CONTABLE OFICIAL - LIBRO DE CAJA Y ARQUEO (${nombreMes})`;
+            window.print();
+        }
+
         function openModificarCuotaModal() {
             if (!currentUser || currentUser.role !== 'Tesorero') {
                 alert("ACCESO DENEGADO: Solo el Tesorero puede modificar el valor de la cuota social.");
@@ -1285,7 +1334,6 @@
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
             } else if (rol === 'Revisor de Cuentas') {
-                // REVISOR DE CUENTAS: LECTURA TOTAL Y DESCARGAS
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
@@ -1512,7 +1560,6 @@
             const displayCuota = document.getElementById('displayValorCuota');
             if (displayCuota) displayCuota.textContent = '$' + valorCuotaSocial.toLocaleString('es-AR');
 
-            // INCLUSIÓN: Tanto Socios como la Comisión Directiva figuran para abonar la cuota
             const sociosList = dbUsers.filter(u => u.role !== 'Inactivo' && u.role !== 'Pendiente');
             let sociosAlDiaCount = 0;
 
@@ -1598,13 +1645,12 @@
                 u.role = 'Socio';
                 if (isFirebaseReady && u.idDoc) {
                     firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
-                        .then(() => console.log("Usuario reactivado en Firestore"));
+                        .then(() => console.log("Usuario reactivado in Firestore"));
                 }
                 renderAll();
             }
         }
 
-        // FUNCIONES DE EDICIÓN DE PERFIL, EMAIL Y ELIMINACIÓN DEFINITIVA
         function openEditUsuarioModal(index) {
             if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
                 alert("ACCESO DENEGADO: Tu rol no tiene permisos de modificación de usuarios.");
@@ -1804,7 +1850,6 @@
             }
             if (confirm(`⚠️ ¿Estás seguro de eliminar el ${numeroActa}? Esta acción es irreversible.`)) {
                 if (isFirebaseReady) {
-                    // Buscar documento por id o numero en Firestore
                     firebase.firestore().collection('actas').where('numero', '==', numeroActa).get()
                         .then(snapshot => {
                             snapshot.forEach(doc => {
@@ -1872,7 +1917,7 @@
                 let mIdx = parseInt(mesVal);
                 movsFiltrados = dbMovimientos.filter(m => {
                     if (!m.fecha) return false;
-                    let partes = m.fecha.split('-'); // YYYY-MM-DD
+                    let partes = m.fecha.split('-'); 
                     if (partes.length < 2) return false;
                     let mNum = parseInt(partes[1]) - 1;
                     return mNum === mIdx;
@@ -1888,7 +1933,6 @@
             document.getElementById('arqueoFlujoNeto').textContent = '$' + neto.toLocaleString('es-AR');
             document.getElementById('arqueoSaldoFinal').textContent = '$' + finalSaldo.toLocaleString('es-AR');
 
-            // Actualizar título de impresión si existe
             let printTitle = document.getElementById('printTitle');
             if (printTitle) {
                 let nombreMes = mesVal === 'todos' ? 'EJERCICIO COMPLETO 2026' : `MES DE ${MESES_ANIO[parseInt(mesVal)].toUpperCase()} 2026`;
