@@ -618,7 +618,6 @@
                         <option value="Pendiente">Pendiente</option>
                         <option value="Tesorero">Tesorero</option>
                         <option value="Presidente">Presidente</option>
-                        <option value="Secretario">Secretario</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
                         <option value="Inactivo">Inactivo (Baja Lógica)</option>
                     </select>
@@ -836,7 +835,6 @@
                         <option value="Socio" selected>Socio</option>
                         <option value="Presidente">Presidente</option>
                         <option value="Tesorero">Tesorero</option>
-                        <option value="Secretario">Secretario</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
                     </select>
                 </div>
@@ -1275,7 +1273,7 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Presidente' || rol === 'Secretario' || rol === 'Vocal') {
+            } else if (rol === 'Presidente' || rol === 'Vocal') {
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
@@ -1344,7 +1342,7 @@
             const btnBox = document.getElementById('btnFirmarBox');
             if (!container) return;
 
-            const rolesComision = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
+            const rolesComision = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
             
             container.innerHTML = rolesComision.map(rol => {
                 let firmaEncontrada = dbFirmas.find(f => f.rol === rol);
@@ -1381,7 +1379,7 @@
             if (!currentUser) return;
             let rolActual = currentUser.role;
 
-            const rolesAutorizados = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
+            const rolesAutorizados = ['Tesorero', 'Presidente', 'Revisor de Cuentas', 'Vocal'];
             if (!rolesAutorizados.includes(rolActual)) {
                 alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma en actas y balances de la Asociación.");
                 return;
