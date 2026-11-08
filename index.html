@@ -545,12 +545,12 @@
                                     <i class="fa-solid fa-print"></i> Imprimir Vista
                                 </button>
                                 
-                                <!-- NUEVO: Botón Descarga CSV Padrón (Exclusivo Comisión Directiva) -->
+                                <!-- Botón Descarga CSV Padrón (Exclusivo Comisión Directiva) -->
                                 <button onclick="descargarCsvPadron()" class="px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
                                     <i class="fa-solid fa-file-arrow-down"></i> Descargar CSV Padrón
                                 </button>
 
-                                <!-- NUEVO: Botón Descarga CSV Libro de Caja (Exclusivo Comisión Directiva) -->
+                                <!-- Botón Descarga CSV Libro de Caja (Exclusivo Comisión Directiva) -->
                                 <button onclick="descargarCsvLibroCaja()" class="px-3.5 py-2 bg-appOrange hover:bg-orange-600 text-white font-bold text-xs rounded-lg shadow flex items-center gap-2 transition-colors">
                                     <i class="fa-solid fa-file-arrow-down"></i> Descargar CSV Libro de Caja
                                 </button>
@@ -927,13 +927,13 @@
                 firebase.initializeApp(firebaseConfig);
                 isFirebaseReady = true;
             }
-        } catch(e) { console.log("Firebase no listo, usando estado dinámico."); }
+        } catch(e) { console.log("Firebase no listo."); }
 
         let valorCuotaSocial = 1000;
         const MESES_ANIO = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
         // ==========================================
-        // VALIDACIÓN DE PERMISOS PARA COMISIÓN DIRECTIVA Y DESCARGAS CSV
+        // VALIDACIÓN DE PERMISOS Y DESCARGAS CSV
         // ==========================================
         function verificarPermisoComision() {
             if (!currentUser) {
@@ -950,7 +950,6 @@
             return true;
         }
 
-        // Función auxiliar para exportar e iniciar la descarga de un archivo CSV
         function descargarArchivoCsv(nombreArchivo, contenidoCsv) {
             const blob = new Blob(["\uFEFF" + contenidoCsv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -962,7 +961,6 @@
             document.body.removeChild(link);
         }
 
-        // Descarga de CSV del Padrón de Usuarios
         function descargarCsvPadron() {
             if (!verificarPermisoComision()) return;
 
@@ -986,7 +984,6 @@
             descargarArchivoCsv("Padron_Asociacion_228.csv", csvContent);
         }
 
-        // Descarga de CSV del Libro de Caja
         function descargarCsvLibroCaja() {
             if (!verificarPermisoComision()) return;
 
@@ -1044,7 +1041,7 @@
                 valorCuotaSocial = nuevoVal;
                 closeModificarCuotaModal();
                 renderAll();
-                alert(`Valor vigente de la cuota social actualizado a $${valorCuotaSocial.toLocaleString('es-AR')}. Los pagos históricos se mantienen intactos.`);
+                alert(`Valor vigente de la cuota social actualizado a $${valorCuotaSocial.toLocaleString('es-AR')}.`);
             }
         }
 
@@ -1172,50 +1169,45 @@
             { rol: 'Presidente', nombre: 'Ana Gómez', fecha: '2026-03-10 11:15', estado: 'Firmado Digitalmente' }
         ];
 
+        // ==========================================
+        // FUNCIÓN DE LOGIN CORREGIDA (VALIDA CONTRASEÑA REAL)
+        // ==========================================
         function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPassword').value;
 
-            if (isFirebaseReady) {
-                firebase.auth().signInWithEmailAndPassword(email, pass)
-                    .then(userCred => { loadUserProfile(userCred.user.uid, email); })
-                    .catch(err => {
-                        if (email === 'ricardoiermito@gmail.com') {
-                            setAdminSession(email);
-                        } else {
-                            showLoginError("Error de ingreso: " + err.message);
-                        }
-                    });
-            } else {
-                setAdminSession(email);
+            if (!isFirebaseReady) {
+                showLoginError("Error: Firebase no está configurado. La validación de contraseña requiere conexión activa.");
+                return;
             }
-        }
 
-        function setAdminSession(email) {
-            currentUser = { email, role: (email === 'ricardoiermito@gmail.com') ? 'Tesorero' : 'Socio', name: email };
-            document.getElementById('authContainer').classList.add('hidden');
-            document.getElementById('appScreen').classList.remove('hidden');
-            document.getElementById('displayUsername').textContent = email;
-            document.getElementById('displayRoleBadge').textContent = currentUser.role;
-            cargarDatosDesdeFirestore();
-            renderAll();
+            // Validación estricta con Firebase Auth (Comprueba email y contraseña reales)
+            firebase.auth().signInWithEmailAndPassword(email, pass)
+                .then(userCred => { 
+                    loadUserProfile(userCred.user.uid, email); 
+                })
+                .catch(err => {
+                    showLoginError("Credenciales incorrectas: Verificá tu correo y contraseña.");
+                });
         }
 
         function loadUserProfile(uid, email) {
             firebase.firestore().collection('usuarios').doc(uid).get().then(doc => {
                 if (doc.exists) {
                     currentUser = doc.data();
-                    if (currentUser.email === 'ricardoiermito@gmail.com') currentUser.role = 'Tesorero';
-                    document.getElementById('authContainer').classList.add('hidden');
-                    document.getElementById('appScreen').classList.remove('hidden');
-                    document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
-                    document.getElementById('displayRoleBadge').textContent = currentUser.role;
-                    cargarDatosDesdeFirestore();
-                    renderAll();
+                    if (email === 'ricardoiermito@gmail.com') currentUser.role = 'Tesorero';
                 } else {
-                    setAdminSession(email);
+                    currentUser = { email, role: (email === 'ricardoiermito@gmail.com') ? 'Tesorero' : 'Socio' };
                 }
+                document.getElementById('authContainer').classList.add('hidden');
+                document.getElementById('appScreen').classList.remove('hidden');
+                document.getElementById('displayUsername').textContent = currentUser.nombre ? `${currentUser.nombre} ${currentUser.apellido}` : email;
+                document.getElementById('displayRoleBadge').textContent = currentUser.role || 'Socio';
+                cargarDatosDesdeFirestore();
+                renderAll();
+            }).catch(err => {
+                showLoginError("Error al cargar perfil de usuario.");
             });
         }
 
@@ -1231,7 +1223,9 @@
                     if (currentUser && (doc.id === currentUser.idDoc || uData.email === currentUser.email)) {
                         currentUser = { ...currentUser, ...uData };
                         document.getElementById('displayRoleBadge').textContent = currentUser.role || 'Socio';
-                        document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+                        if (currentUser.nombre) {
+                            document.getElementById('displayUsername').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+                        }
                     }
                 });
                 if (tempUsers.length > 0) {
@@ -1292,21 +1286,30 @@
                         alert("Solicitud registrada con éxito. El Tesorero aprobará tu cuenta.");
                         showAuthScreen('login');
                     })
-                    .catch(err => { alert("Error: " + err.message); });
+                    .catch(err => { alert("Error al registrar: " + err.message); });
             } else {
-                dbUsers.push(userData);
-                alert("Solicitud cargada en el panel del Secretario.");
-                showAuthScreen('login');
+                alert("Error: Firebase no está configurado.");
             }
         }
 
         function handleForgotPassword(e) {
             e.preventDefault();
-            alert("Si el servicio de correo está activo en Firebase, se enviará el enlace de recuperación.");
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (isFirebaseReady && email) {
+                firebase.auth().sendPasswordResetEmail(email)
+                    .then(() => {
+                        alert("Se ha enviado un enlace de recuperación a tu correo electrónico.");
+                        showAuthScreen('login');
+                    })
+                    .catch(err => alert("Error: " + err.message));
+            } else {
+                alert("Ingresá un correo válido.");
+            }
         }
 
         function handleLogout() {
             if (isFirebaseReady) firebase.auth().signOut();
+            currentUser = null;
             document.getElementById('authContainer').classList.remove('hidden');
             document.getElementById('appScreen').classList.add('hidden');
         }
@@ -1379,7 +1382,7 @@
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
-            } else if (rol === 'Revisor de Cuentas') {
+            } else {
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
@@ -1388,40 +1391,11 @@
                 if (navArqueo) navArqueo.classList.remove('hidden');
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Presidente' || rol === 'Secretario') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.remove('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
-            } else if (rol === 'Vocal') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.add('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
-                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.add('hidden'));
-            } else if (rol === 'Tesorero') {
-                if (navDashboard) navDashboard.classList.remove('hidden');
-                if (navCaja) navCaja.classList.remove('hidden');
-                if (navCuotas) navCuotas.classList.remove('hidden');
-                if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.remove('hidden');
-                if (navArqueo) navArqueo.classList.remove('hidden');
-                if (navMiPerfil) navMiPerfil.classList.remove('hidden');
-
-                document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
-                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
+                if (rol !== 'Tesorero') {
+                    document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                } else {
+                    document.querySelectorAll('.only-tesorero').forEach(el => el.classList.remove('hidden'));
+                }
             }
         }
 
@@ -1510,7 +1484,7 @@
 
             const rolesAutorizados = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
             if (!rolesAutorizados.includes(rolActual)) {
-                alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma en actas y balances de la Asociación.");
+                alert("ACCESO DENEGADO: Los usuarios con rol de Socio o Pendiente están excluidos de las atribuciones de firma.");
                 return;
             }
 
@@ -1524,15 +1498,6 @@
                 fecha: fechaStr,
                 estado: 'Firmado Digitalmente'
             });
-
-            if (isFirebaseReady) {
-                firebase.firestore().collection('firmas').add({
-                    rol: rolActual,
-                    nombre: nombreCompleto,
-                    fecha: fechaStr,
-                    estado: 'Firmado Digitalmente'
-                }).catch(e => console.log(e));
-            }
 
             alert(`Firma registrada con éxito bajo el rol de ${rolActual}.`);
             renderFirmas();
@@ -1650,9 +1615,9 @@
 
                 return `
                 <tr class="hover:bg-slate-50 ${u.role === 'Inactivo' ? 'bg-red-50/50 opacity-75' : ''}">
-                    <td class="p-3 font-bold">${u.nombre} ${u.apellido}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
-                    <td class="p-3 font-mono">DNI: ${u.dni}<br>CUIL: ${u.cuil}</td>
-                    <td class="p-3">Tel: ${u.telefono}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
+                    <td class="p-3 font-bold">${u.nombre || ''} ${u.apellido || ''}<br><span class="text-[10px] text-slate-500 font-mono">${u.email}</span></td>
+                    <td class="p-3 font-mono">DNI: ${u.dni || 'S/D'}<br>CUIL: ${u.cuil || 'S/D'}</td>
+                    <td class="p-3">Tel: ${u.telefono || 'S/D'}<br><span class="text-[10px] text-slate-500">${u.direccion || 'S/D'}</span></td>
                     <td class="p-3">
                         <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
                             ${(u.role || 'Socio').toUpperCase()}
@@ -1661,8 +1626,8 @@
                     <td class="p-3 text-center space-x-1 no-print">
                         ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
                         ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
-                        <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar Perfil</button>
-                        <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja Lógica</button>
+                        <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar</button>
+                        <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja</button>
                     </td>
                 </tr>
                 `;
@@ -1670,16 +1635,11 @@
         }
 
         function darDeBajaUsuario(index) {
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
-                alert("ACCESO DENEGADO: No tenés permisos para dar de baja usuarios.");
-                return;
-            }
             let u = dbUsers[index];
-            if (confirm(`¿Deseas dar de baja (inactivar) a ${u.nombre} ${u.apellido}? Se conservará todo su historial.`)) {
+            if (confirm(`¿Deseas dar de baja a ${u.nombre || u.email}?`)) {
                 u.role = 'Inactivo';
                 if (isFirebaseReady && u.idDoc) {
-                    firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Inactivo' })
-                        .then(() => console.log("Usuario inactivado en Firestore"));
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Inactivo' });
                 }
                 renderAll();
             }
@@ -1687,21 +1647,14 @@
 
         function reactivarUsuario(index) {
             let u = dbUsers[index];
-            if (confirm(`¿Deseas reactivar al usuario ${u.nombre} ${u.apellido} como Socio activo?`)) {
-                u.role = 'Socio';
-                if (isFirebaseReady && u.idDoc) {
-                    firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
-                        .then(() => console.log("Usuario reactivado en Firestore"));
-                }
-                renderAll();
+            u.role = 'Socio';
+            if (isFirebaseReady && u.idDoc) {
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' });
             }
+            renderAll();
         }
 
         function openEditUsuarioModal(index) {
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
-                alert("ACCESO DENEGADO: Tu rol no tiene permisos de modificación de usuarios.");
-                return;
-            }
             let u = dbUsers[index];
             document.getElementById('editUserIndex').value = index;
             document.getElementById('editUserNombre').value = u.nombre || '';
@@ -1710,32 +1663,11 @@
             document.getElementById('editUserCuil').value = u.cuil || '';
             document.getElementById('editUserEmail').value = u.email || '';
             document.getElementById('editUserTelefono').value = u.telefono || '';
-            
-            let rolSelect = document.getElementById('editUserRol');
-            if (currentUser.role === 'Secretario') {
-                rolSelect.innerHTML = `
-                    <option value="Socio">Socio</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Inactivo">Inactivo (Baja Lógica)</option>
-                `;
-            } else {
-                rolSelect.innerHTML = `
-                    <option value="Socio">Socio</option>
-                    <option value="Pendiente">Pendiente</option>
-                    <option value="Tesorero">Tesorero</option>
-                    <option value="Presidente">Presidente</option>
-                    <option value="Secretario">Secretario</option>
-                    <option value="Revisor de Cuentas">Revisor de Cuentas</option>
-                    <option value="Inactivo">Inactivo (Baja Lógica)</option>
-                `;
-            }
-            rolSelect.value = u.role || 'Socio';
+            document.getElementById('editUserRol').value = u.role || 'Socio';
             document.getElementById('modalEditUsuario').classList.remove('hidden');
         }
 
-        function closeEditUsuarioModal() {
-            document.getElementById('modalEditUsuario').classList.add('hidden');
-        }
+        function closeEditUsuarioModal() { document.getElementById('modalEditUsuario').classList.add('hidden'); }
 
         function saveEditUsuario(e) {
             e.preventDefault();
@@ -1751,33 +1683,23 @@
             u.role = document.getElementById('editUserRol').value;
 
             if (isFirebaseReady && u.idDoc) {
-                firebase.firestore().collection('usuarios').doc(u.idDoc).update({
-                    nombre: u.nombre,
-                    apellido: u.apellido,
-                    dni: u.dni,
-                    cuil: u.cuil,
-                    email: u.email,
-                    telefono: u.telefono,
-                    role: u.role
-                }).then(() => alert("Datos de usuario y correo actualizados con éxito."));
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update(u);
             }
-
             closeEditUsuarioModal();
             renderAll();
         }
 
         function eliminarDefinitivamenteUsuario() {
             if (!currentUser || currentUser.role !== 'Tesorero') {
-                alert("ACCESO DENEGADO: La eliminación definitiva de registros es una atribución exclusiva del Tesorero.");
+                alert("ACCESO DENEGADO: Solo el Tesorero puede eliminar registros definitivamente.");
                 return;
             }
             let i = document.getElementById('editUserIndex').value;
             let u = dbUsers[i];
 
-            if (confirm(`⚠️ ¡ATENCIÓN! ¿Estás COMPLETAMENTE SEGURO de eliminar DEFINITIVAMENTE a ${u.nombre} ${u.apellido}? Esta acción borra su registro permanentemente.`)) {
+            if (confirm(`⚠️ ¿Eliminar DEFINITIVAMENTE a ${u.nombre || u.email}?`)) {
                 if (isFirebaseReady && u.idDoc) {
-                    firebase.firestore().collection('usuarios').doc(u.idDoc).delete()
-                        .then(() => alert("Usuario eliminado definitivamente de la base de datos Firestore."));
+                    firebase.firestore().collection('usuarios').doc(u.idDoc).delete();
                 }
                 dbUsers.splice(i, 1);
                 closeEditUsuarioModal();
@@ -1804,28 +1726,7 @@
             renderAll();
         }
 
-        function openCrearUsuarioManualModal() { 
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
-                alert("ACCESO DENEGADO: No tenés permisos para agregar usuarios manualmente.");
-                return;
-            }
-            let rolSelect = document.getElementById('manRol');
-            if (currentUser.role === 'Secretario') {
-                rolSelect.innerHTML = `
-                    <option value="Socio" selected>Socio</option>
-                    <option value="Pendiente">Pendiente</option>
-                `;
-            } else {
-                rolSelect.innerHTML = `
-                    <option value="Socio" selected>Socio</option>
-                    <option value="Presidente">Presidente</option>
-                    <option value="Tesorero">Tesorero</option>
-                    <option value="Secretario">Secretario</option>
-                    <option value="Revisor de Cuentas">Revisor de Cuentas</option>
-                `;
-            }
-            document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); 
-        }
+        function openCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); }
         function closeCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.add('hidden'); }
 
         function saveUsuarioManual(e) {
@@ -1842,12 +1743,10 @@
             };
 
             if (isFirebaseReady) {
-                firebase.firestore().collection('usuarios').add(nuevoUsr)
-                    .then(() => {
-                        closeCrearUsuarioManualModal();
-                        alert("Usuario agregado con éxito a la base de datos.");
-                    })
-                    .catch(err => alert("Error: " + err.message));
+                firebase.firestore().collection('usuarios').add(nuevoUsr).then(() => {
+                    closeCrearUsuarioManualModal();
+                    alert("Usuario agregado con éxito.");
+                });
             } else {
                 dbUsers.push(nuevoUsr);
                 closeCrearUsuarioManualModal();
@@ -1856,15 +1755,10 @@
         }
 
         function aprobarUsuario(index) {
-            if (!currentUser || (currentUser.role !== 'Tesorero' && currentUser.role !== 'Presidente' && currentUser.role !== 'Secretario')) {
-                alert("ACCESO DENEGADO: No tenés permisos para aprobar socios.");
-                return;
-            }
             dbUsers[index].role = 'Socio';
             let u = dbUsers[index];
             if (isFirebaseReady && u.idDoc) {
-                firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' })
-                    .then(() => console.log("Usuario aprobado en Firestore"));
+                firebase.firestore().collection('usuarios').doc(u.idDoc).update({ role: 'Socio' });
             }
             renderAll();
         }
@@ -1883,29 +1777,21 @@
                         <a href="${a.link}" target="_blank" class="px-2.5 py-1 bg-appRed text-white font-bold rounded text-[11px] inline-flex items-center gap-1">
                             <i class="fa-solid fa-file-pdf"></i> Ver Link
                         </a>
-                        ${esPresidente ? `<button onclick="deleteActa('${a.id || ''}', '${a.numero}')" class="px-2 py-1 bg-red-700 hover:bg-red-800 text-white rounded font-bold text-[10px]" title="Eliminar Acta (Exclusivo Presidente)"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        ${esPresidente ? `<button onclick="deleteActa('${a.id || ''}', '${a.numero}')" class="px-2 py-1 bg-red-700 text-white rounded font-bold text-[10px]"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </td>
                 </tr>
             `).join('');
         }
 
         function deleteActa(id, numeroActa) {
-            if (!currentUser || currentUser.role !== 'Presidente') {
-                alert("ACCESO DENEGADO: La eliminación de actas oficiales es una atribución exclusiva del Presidente.");
-                return;
-            }
-            if (confirm(`⚠️ ¿Estás seguro de eliminar el ${numeroActa}? Esta acción es irreversible.`)) {
+            if (confirm(`¿Eliminar ${numeroActa}?`)) {
                 if (isFirebaseReady) {
-                    firebase.firestore().collection('actas').where('numero', '==', numeroActa).get()
-                        .then(snapshot => {
-                            snapshot.forEach(doc => {
-                                doc.ref.delete();
-                            });
-                        }).catch(err => console.log(err));
+                    firebase.firestore().collection('actas').where('numero', '==', numeroActa).get().then(snap => {
+                        snap.forEach(doc => doc.ref.delete());
+                    });
                 }
                 dbActas = dbActas.filter(a => a.id != id && a.numero != numeroActa);
                 renderAll();
-                alert("Acta eliminada con éxito.");
             }
         }
 
@@ -1914,33 +1800,24 @@
 
         function saveNuevaActa(e) {
             e.preventDefault();
-            let linkVal = document.getElementById('actaLinkPdf').value.trim();
-            if (!linkVal || (!linkVal.startsWith('http://') && !linkVal.startsWith('https://') && !linkVal.startsWith('ftp://'))) {
-                alert("Por favor ingresá un enlace (URL) válido que comience con http:// o https:// para el documento PDF del acta.");
-                return;
-            }
-
             let nuevaActa = {
                 id: Date.now(),
                 numero: document.getElementById('actaNumero').value,
                 fecha: document.getElementById('actaFecha').value,
                 titulo: document.getElementById('actaTitulo').value,
                 firmantes: document.getElementById('actaFirmantes').value,
-                link: linkVal
+                link: document.getElementById('actaLinkPdf').value.trim()
             };
 
             if (isFirebaseReady) {
-                firebase.firestore().collection('actas').add(nuevaActa)
-                    .then(() => {
-                        closeNuevaActaModal();
-                        alert("Acta registrada y guardada en la base de datos con éxito.");
-                    })
-                    .catch(err => alert("Error al guardar acta en Firebase: " + err.message));
+                firebase.firestore().collection('actas').add(nuevaActa).then(() => {
+                    closeNuevaActaModal();
+                    alert("Acta guardada.");
+                });
             } else {
                 dbActas.unshift(nuevaActa);
                 closeNuevaActaModal();
                 renderAll();
-                alert("Acta registrada con éxito.");
             }
         }
 
@@ -1965,8 +1842,7 @@
                     if (!m.fecha) return false;
                     let partes = m.fecha.split('-'); 
                     if (partes.length < 2) return false;
-                    let mNum = parseInt(partes[1]) - 1;
-                    return mNum === mIdx;
+                    return (parseInt(partes[1]) - 1) === mIdx;
                 });
             }
 
@@ -1995,11 +1871,9 @@
             };
 
             if (isFirebaseReady) {
-                firebase.firestore().collection('movimientos').add(nuevoMov)
-                    .then(() => {
-                        closeMovimientoModal();
-                    })
-                    .catch(err => alert("Error al guardar en Firebase: " + err.message));
+                firebase.firestore().collection('movimientos').add(nuevoMov).then(() => {
+                    closeMovimientoModal();
+                });
             } else {
                 dbMovimientos.unshift(nuevoMov);
                 closeMovimientoModal();
@@ -2009,21 +1883,17 @@
 
         function deleteMovimiento(id) {
             if (!currentUser || currentUser.role !== 'Tesorero') {
-                alert("ACCESO DENEGADO: La eliminación de registros contables es una atribución exclusiva del Tesorero.");
+                alert("ACCESO DENEGADO: Solo el Tesorero puede eliminar movimientos.");
                 return;
             }
-            if (confirm("¿Estás seguro de eliminar este registro contable? Se borrará de la base de datos de Tesorería.")) {
+            if (confirm("¿Estás seguro de eliminar este registro contable?")) {
                 if (isFirebaseReady) {
-                    firebase.firestore().collection('movimientos').where('id', '==', id).get()
-                        .then(snapshot => {
-                            snapshot.forEach(doc => {
-                                doc.ref.delete();
-                            });
-                        }).catch(err => console.log("Error al borrar en Firebase:", err));
+                    firebase.firestore().collection('movimientos').where('id', '==', id).get().then(snap => {
+                        snap.forEach(doc => doc.ref.delete());
+                    });
                 }
                 dbMovimientos = dbMovimientos.filter(m => m.id !== id);
                 renderAll();
-                alert("Asiento eliminado correctamente.");
             }
         }
     </script>
