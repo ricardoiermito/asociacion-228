@@ -482,12 +482,12 @@
                     </div>
                 </div>
 
-                <!-- TAB 5: GESTIÓN DE USUARIOS -->
+                <!-- TAB 5: GESTIÓN DE USUARIOS (RESTRINGIDO A TESORERO Y SECRETARIO) -->
                 <div id="tab-usuarios" class="tab-pane hidden space-y-4">
                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap justify-between items-center gap-3">
                         <div>
                             <h2 class="text-base font-bold text-slate-900"><i class="fa-solid fa-user-gear text-appRed mr-2"></i>Gestión Integral de Usuarios y Padrón</h2>
-                            <p class="text-xs text-slate-500">Alta manual, modificación de datos de perfil, email y asignación de roles</p>
+                            <p class="text-xs text-slate-500">Alta manual, modificación de datos de perfil, email y asignación de roles (Acceso exclusivo: Tesorería y Secretaría)</p>
                         </div>
                         <button onclick="openCrearUsuarioManualModal()" class="only-gestor-usuarios px-3.5 py-2 bg-appGreen hover:bg-green-700 text-white font-bold text-xs rounded-lg shadow transition-colors no-print">
                             <i class="fa-solid fa-user-plus mr-1"></i> Agregar Usuario Manualmente
@@ -514,7 +514,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 6: ARQUEO E INFORMES CSV (CON DESCARGA DE ARCHIVOS CSV Y PERMISOS COMISIÓN DIRECTIVA) -->
+                <!-- TAB 6: ARQUEO E INFORMES CSV (CON DESCARGA DE ARCHIVOS CSV Y PERMISOS COMISIÓN DIRECTIVA INCLUYENDO VOCAL) -->
                 <div id="tab-arqueo" class="tab-pane hidden space-y-6">
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
                         <div class="flex flex-wrap justify-between items-center border-b border-slate-200 pb-4 gap-3">
@@ -574,9 +574,9 @@
 
                         <div class="border-t border-slate-200 pt-4">
                             <h3 class="font-bold text-slate-800 text-xs uppercase mb-3"><i class="fa-solid fa-file-signature text-appBlue mr-1"></i> Libro de Firmas y Conformidad de Comisión Directiva</h3>
-                            <p class="text-xs text-slate-500 mb-4">Cada miembro autorizado puede emitir su firma digital de conformidad para el presente balance y arqueo (Excluye socios generales).</p>
+                            <p class="text-xs text-slate-500 mb-4">Cada miembro autorizado de la Comisión Directiva (Presidente, Tesorero, Secretario, Revisor de Cuentas, Vocal) puede emitir su firma digital de conformidad para el presente balance y arqueo.</p>
                             
-                            <div id="firmasConformidadContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div id="firmasConformidadContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
                                 <!-- Dinámico -->
                             </div>
 
@@ -643,6 +643,7 @@
                         <option value="Presidente">Presidente</option>
                         <option value="Secretario">Secretario</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                        <option value="Vocal">Vocal</option>
                         <option value="Inactivo">Inactivo (Baja Lógica)</option>
                     </select>
                 </div>
@@ -817,11 +818,11 @@
         </div>
     </div>
 
-    <!-- MODAL CREAR USUARIO MANUAL -->
+    <!-- MODAL CREAR USUARIO MANUAL (SOLO TESORERO Y SECRETARIO) -->
     <div id="modalCrearUsuarioManual" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 no-print">
         <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="bg-appGreen text-white px-4 py-3 flex justify-between items-center text-xs font-bold">
-                <span>AGREGAR USUARIO DESDE SECRETARÍA</span>
+                <span>AGREGAR USUARIO DESDE SECRETARÍA / TESORERÍA</span>
                 <button onclick="closeCrearUsuarioManualModal()" class="text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form onsubmit="saveUsuarioManual(event)" class="p-4 space-y-2.5 text-xs">
@@ -861,6 +862,7 @@
                         <option value="Tesorero">Tesorero</option>
                         <option value="Secretario">Secretario</option>
                         <option value="Revisor de Cuentas">Revisor de Cuentas</option>
+                        <option value="Vocal">Vocal</option>
                     </select>
                 </div>
                 <div class="pt-2 border-t border-slate-200 flex justify-end gap-2">
@@ -948,6 +950,13 @@
                 return false;
             }
             return true;
+        }
+
+        // AUXILIAR CONTROL EXCLUSIVO TESORERO Y SECRETARIO
+        function esGestorUsuariosAutorizado() {
+            if (!currentUser) return false;
+            const rol = currentUser.role || 'Socio';
+            return (rol === 'Tesorero' || rol === 'Secretario');
         }
 
         function descargarArchivoCsv(nombreArchivo, contenidoCsv) {
@@ -1283,7 +1292,7 @@
                         return firebase.firestore().collection('usuarios').doc(userCred.user.uid).set(userData);
                     })
                     .then(() => {
-                        alert("Solicitud registrada con éxito. El Tesorero aprobará tu cuenta.");
+                        alert("Solicitud registrada con éxito. El Tesorero o Secretario aprobará tu cuenta.");
                         showAuthScreen('login');
                     })
                     .catch(err => { alert("Error al registrar: " + err.message); });
@@ -1332,8 +1341,9 @@
                 tabKey = 'miperfil';
             }
 
-            if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Presidente' && rol !== 'Secretario' && rol !== 'Revisor de Cuentas')) {
-                alert("ACCESO RESTRINGIDO: Solo la Comisión Directiva autorizada puede acceder a la gestión de usuarios.");
+            // RESTRICCIÓN ESTRICTA DE GESTIÓN DE USUARIOS: SOLO TESORERO Y SECRETARIO
+            if (tabKey === 'usuarios' && (rol !== 'Tesorero' && rol !== 'Secretario')) {
+                alert("ACCESO RESTRINGIDO: La gestión y modificación de usuarios está reservada exclusivamente para la Tesorería y Secretaría.");
                 tabKey = (rol === 'Socio' || rol === 'Pendiente') ? 'miperfil' : 'dashboard';
             }
 
@@ -1381,16 +1391,26 @@
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
                 document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.add('hidden'));
                 switchTab('miperfil');
             } else {
                 if (navDashboard) navDashboard.classList.remove('hidden');
                 if (navCaja) navCaja.classList.remove('hidden');
                 if (navCuotas) navCuotas.classList.remove('hidden');
                 if (navSecretaria) navSecretaria.classList.remove('hidden');
-                if (navUsuarios) navUsuarios.classList.remove('hidden');
                 if (navArqueo) navArqueo.classList.remove('hidden');
                 if (navMiPerfil) navMiPerfil.classList.remove('hidden');
 
+                // VISIBILIDAD GESTIÓN DE USUARIOS: EXCLUSIVO TESORERO Y SECRETARIO
+                if (rol === 'Tesorero' || rol === 'Secretario') {
+                    if (navUsuarios) navUsuarios.classList.remove('hidden');
+                    document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.remove('hidden'));
+                } else {
+                    if (navUsuarios) navUsuarios.classList.add('hidden');
+                    document.querySelectorAll('.only-gestor-usuarios').forEach(el => el.classList.add('hidden'));
+                }
+
+                // ACCIONES EXCLUSIVAS DE TESORERÍA (Eliminación definitiva, cuotas, saldos)
                 if (rol !== 'Tesorero') {
                     document.querySelectorAll('.only-tesorero').forEach(el => el.classList.add('hidden'));
                 } else {
@@ -1445,13 +1465,14 @@
             const btnBox = document.getElementById('btnFirmarBox');
             if (!container) return;
 
+            // INCLUYE AL ROL DE VOCAL DENTRO DE LOS MIEMBROS DE COMISIÓN DIRECTIVA CON FACULTAD DE FIRMA
             const rolesComision = ['Presidente', 'Secretario', 'Tesorero', 'Revisor de Cuentas', 'Vocal'];
             
             container.innerHTML = rolesComision.map(rol => {
                 let firmaEncontrada = dbFirmas.find(f => f.rol === rol);
                 if (firmaEncontrada) {
                     return `
-                        <div class="bg-green-50 border border-green-200 p-3.5 rounded-lg space-y-1">
+                        <div class="bg-green-50 border border-green-200 p-3 rounded-lg space-y-1">
                             <span class="text-[10px] font-bold px-2 py-0.5 bg-green-200 text-green-800 rounded uppercase">${rol}</span>
                             <p class="font-bold text-slate-900 text-xs mt-1">${firmaEncontrada.nombre}</p>
                             <p class="text-[10px] text-green-700 font-mono"><i class="fa-solid fa-circle-check mr-1"></i> ${firmaEncontrada.estado}</p>
@@ -1460,7 +1481,7 @@
                     `;
                 } else {
                     return `
-                        <div class="bg-slate-50 border border-slate-200 p-3.5 rounded-lg space-y-1">
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg space-y-1">
                             <span class="text-[10px] font-bold px-2 py-0.5 bg-slate-200 text-slate-700 rounded uppercase">${rol}</span>
                             <p class="font-bold text-slate-400 text-xs mt-1">Pendiente de firma</p>
                             <p class="text-[10px] text-amber-600 font-mono"><i class="fa-solid fa-clock mr-1"></i> Aguardando rúbrica</p>
@@ -1607,11 +1628,13 @@
 
         function renderUsuariosAdmin() {
             const body = document.getElementById('usuariosAdminTable');
+            let gestorAutorizado = esGestorUsuariosAutorizado();
+
             body.innerHTML = dbUsers.map((u, index) => {
                 let badgeClass = 'bg-green-100 text-green-800';
                 if (u.role === 'Pendiente') badgeClass = 'bg-amber-100 text-amber-800';
                 if (u.role === 'Inactivo') badgeClass = 'bg-red-100 text-red-800 border border-red-300';
-                if (u.role === 'Tesorero' || u.role === 'Presidente' || u.role === 'Revisor de Cuentas') badgeClass = 'bg-purple-100 text-purple-800 font-bold';
+                if (u.role === 'Tesorero' || u.role === 'Presidente' || u.role === 'Secretario' || u.role === 'Revisor de Cuentas' || u.role === 'Vocal') badgeClass = 'bg-purple-100 text-purple-800 font-bold';
 
                 return `
                 <tr class="hover:bg-slate-50 ${u.role === 'Inactivo' ? 'bg-red-50/50 opacity-75' : ''}">
@@ -1624,10 +1647,10 @@
                         </span>
                     </td>
                     <td class="p-3 text-center space-x-1 no-print">
-                        ${u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
-                        ${u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
-                        <button onclick="openEditUsuarioModal(${index})" class="only-gestor-usuarios px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar</button>
-                        <button onclick="darDeBajaUsuario(${index})" class="only-gestor-usuarios px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja</button>
+                        ${gestorAutorizado && u.role === 'Pendiente' ? `<button onclick="aprobarUsuario(${index})" class="px-2 py-1 bg-green-600 text-white rounded text-[10px] font-bold mr-1" title="Aprobar Socio"><i class="fa-solid fa-check"></i> Aprobar</button>` : ''}
+                        ${gestorAutorizado && u.role === 'Inactivo' ? `<button onclick="reactivarUsuario(${index})" class="px-2 py-1 bg-green-700 text-white rounded text-[10px] font-bold" title="Reactivar Socio"><i class="fa-solid fa-rotate-left"></i> Reactivar</button>` : ''}
+                        ${gestorAutorizado ? `<button onclick="openEditUsuarioModal(${index})" class="px-2 py-1 bg-appBlue text-white rounded text-[10px] font-bold" title="Editar Rol y Datos"><i class="fa-solid fa-pen"></i> Editar</button>` : ''}
+                        ${gestorAutorizado ? `<button onclick="darDeBajaUsuario(${index})" class="px-2 py-1 bg-red-600 text-white rounded text-[10px] font-bold" title="Inactivar usuario"><i class="fa-solid fa-user-minus"></i> Baja</button>` : ''}
                     </td>
                 </tr>
                 `;
@@ -1635,6 +1658,10 @@
         }
 
         function darDeBajaUsuario(index) {
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: Solo el Tesorero y el Secretario pueden dar de baja usuarios.");
+                return;
+            }
             let u = dbUsers[index];
             if (confirm(`¿Deseas dar de baja a ${u.nombre || u.email}?`)) {
                 u.role = 'Inactivo';
@@ -1646,6 +1673,10 @@
         }
 
         function reactivarUsuario(index) {
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: Solo el Tesorero y el Secretario pueden reactivar usuarios.");
+                return;
+            }
             let u = dbUsers[index];
             u.role = 'Socio';
             if (isFirebaseReady && u.idDoc) {
@@ -1655,6 +1686,10 @@
         }
 
         function openEditUsuarioModal(index) {
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: Tu rol no tiene permisos de modificación de usuarios.");
+                return;
+            }
             let u = dbUsers[index];
             document.getElementById('editUserIndex').value = index;
             document.getElementById('editUserNombre').value = u.nombre || '';
@@ -1671,6 +1706,10 @@
 
         function saveEditUsuario(e) {
             e.preventDefault();
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: Operación no autorizada.");
+                return;
+            }
             let i = document.getElementById('editUserIndex').value;
             let u = dbUsers[i];
 
@@ -1726,11 +1765,21 @@
             renderAll();
         }
 
-        function openCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); }
+        function openCrearUsuarioManualModal() { 
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: No tenés permisos para agregar usuarios manualmente.");
+                return;
+            }
+            document.getElementById('modalCrearUsuarioManual').classList.remove('hidden'); 
+        }
         function closeCrearUsuarioManualModal() { document.getElementById('modalCrearUsuarioManual').classList.add('hidden'); }
 
         function saveUsuarioManual(e) {
             e.preventDefault();
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: Operación no autorizada.");
+                return;
+            }
             const nuevoUsr = {
                 nombre: document.getElementById('manNombre').value,
                 apellido: document.getElementById('manApellido').value,
@@ -1755,6 +1804,10 @@
         }
 
         function aprobarUsuario(index) {
+            if (!esGestorUsuariosAutorizado()) {
+                alert("ACCESO DENEGADO: No tenés permisos para aprobar socios.");
+                return;
+            }
             dbUsers[index].role = 'Socio';
             let u = dbUsers[index];
             if (isFirebaseReady && u.idDoc) {
@@ -1784,6 +1837,10 @@
         }
 
         function deleteActa(id, numeroActa) {
+            if (!currentUser || currentUser.role !== 'Presidente') {
+                alert("ACCESO DENEGADO: La eliminación de actas oficiales es una atribución exclusiva del Presidente.");
+                return;
+            }
             if (confirm(`¿Eliminar ${numeroActa}?`)) {
                 if (isFirebaseReady) {
                     firebase.firestore().collection('actas').where('numero', '==', numeroActa).get().then(snap => {
